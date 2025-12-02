@@ -1,0 +1,26 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title><%= content_for?(:title) ? yield(:title) : "PDF" %></title>
+    <%= wicked_pdf_stylesheet_link_tag 'pdf' %>
+    <style>
+      body {
+      font-family: "DejaVu Sans", sans-serif; font-size: 14px;
+      }
+      table {
+      width: 100%;
+      border-collapse: collapse;
+      }
+      th, td {
+        padding: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
+

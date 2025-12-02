@@ -1,0 +1,217 @@
+<% content_for :title, "Bills" %>
+
+<style>
+  .w-10 { width: 10%; }
+  .w-15 { width: 15%; }
+  .w-40 { width: 40%; }
+  .w-20 { width: 20%; }
+  .text-end { text-align: right; }
+</style>
+
+<%= link_to "Registrar egreso", new_bill_path(request.query_parameters), class: "mb-3 col-6 col-sm-4 col-md-2 col-lg-2 fs-5 btn bg-info text-white" %>
+
+<%= form_with url: bills_path, method: :get, local: true do %>
+  <div class="row mb-3 col-12 col-md-12 ms-0 border border-2 border-secondary-subtle rounded">
+
+    <!-- Columna 1: Fecha -->
+    <div class="col-md-3 my-1">
+      <%= label_tag :from_month, "Desde" %>
+        <%= select_tag :from_month,
+             options_for_select((1..12).map { |m| [I18n.t("date.month_names")[m], m] }, @from_date.month),
+             class: "form-control mb-1 border border-2 border-secondary-subtle rounded" %>
+      <%= label_tag :to_month, "Hasta" %>
+      <%= select_tag :to_month,
+            options_for_select((1..12).map { |m| [I18n.t("date.month_names")[m], m] }, @to_date.month),
+            class: "form-control mb-1 border border-2 border-secondary-subtle rounded" %>
+    </div>
+
+    <!-- Columna 2: Agrupar por -->
+    <div class="col-md-3 my-1">
+      <%= label_tag :grouping, "Agrupar por" %><br>
+      <div class="form-check">
+        <%= radio_button_tag :grouping, "by_month", params[:grouping] == "by_month", id: "grouping_by_month", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :grouping_by_month, "Mes", class: "form-check-label" %>
+      </div>
+      <div class="form-check">
+        <%= radio_button_tag :grouping, "by_type", params[:grouping] == "by_type", id: "grouping_by_type", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :grouping_by_type, "Tipo de egreso", class: "form-check-label" %>
+      </div>
+    </div>
+
+    <!-- Columna 3: Acciones -->
+    <div class="col-md-3 mt-4 d-flex flex-column justify-content-start">
+      <%= submit_tag "Filtrar", class: "col-6 mb-2 btn btn-primary" %>
+      <%= link_to "Limpiar", bills_path, class: "col-6 mb-2 btn btn-secondary" %>
+    </div>
+
+  </div>
+<% end %>
+
+<% if current_user.admin? %>
+  <div class="mt-2 my-1 border border-2 border-secondary-subtle rounded">
+    <%= form_with url: import_bills_path, method: :post, local: true, html: { multipart: true } do |f| %>
+      <h5 class="mt-1 ms-2">Importar datos desde archivo Excel</h5>
+      <div class="ms-2">
+        <%= f.label :file, "Archivo" %>
+        <%= f.file_field :file, class: "ps-2 py-1 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style:"height: 40px" %>
+      </div>
+      <div>
+        <%= f.submit "Importar", class: "col-6 col-sm-4 col-md-2 col-lg-2 ms-2 my-2 btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="py-3">
+  <%= link_to "Exportar PDF", bills_path(format: :pdf, from_month: params[:from_month], from_year: params[:from_year], to_month: params[:to_month], to_year: params[:to_year], grouping: params[:grouping]), class: "col-4 col-sm-3 col-md-2 col-lg-2 btn btn-secondary" %>
+</div>
+
+<h2> Detalle de egresos</h2>
+<br>
+
+<% total_general = 0 %>
+
+<div data-controller="confirm-delete-modal">
+
+  <% @bills_by_month.each do |month_date, bills| %>
+    <!-- Título del grupo -->
+    <% if params[:grouping] == "by_type" %>
+      <% label = case month_date
+          when "egreso_1" then "Rendición"
+          when "egreso_2" then "Activo fijo"
+          when "egreso_3" then "Traspaso Banco → Caja"
+          when "egreso_4" then "Traspaso Caja  → Pago"
+          when "egreso_5" then "Otros gastos"
+          else "Otros"
+      end %>
+      <h4><%= label %></h4>
+    <% else %>
+      <h4><%= l(month_date, format: "%B %Y").capitalize %></h4>
+    <% end %>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr class="table-primary">
+            <th scope="col" class="w-10">FECHA</th>
+            <th scope="col" class="w-40">COMENTARIO</th>
+            <th scope="col" class="w-15">TIPO EGRESO</th>
+            <th scope="col" class="w-15 text-end">MONTO</th>
+            <th scope="col" class="w-10 text-center">ACCIÓN</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% subtotal = 0 %>
+          <% bills.each do |bill| %>
+            <tr>
+              <td class="text-start">
+                <div class="d-flex">
+                  <%= link_to bill.date.strftime("%d-%m-%Y"), edit_bill_path(bill, request.query_parameters), data: { turbo: false }, class: "btn btn-primary btn-sm" %>
+                </div>
+              </td>
+              <td class="text-start"><%= bill.comment %></td>
+              <td class="text-start">
+                <% label = case bill.tipo_egreso
+                  when "egreso_1" then "Rendición"
+                  when "egreso_2" then "Activo fijo"
+                  when "egreso_3" then "Traspaso Banco → Caja"
+                  when "egreso_4" then "Traspaso Caja  → Pago"
+                  when "egreso_5" then "Otros gastos"
+                  else "Otros"
+                end %>
+                <%= label %>
+              </td>
+              <td class="text-end">
+                <% subtotal += bill.amount %>
+                <% total_general += bill.amount %>
+                <%= number_to_currency(bill.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+              </td>
+              <td class="text-center">
+                <%= button_to bill_path(bill),
+                      method: :delete,
+                      data: { turbo: false },
+                      form: { id: "deleteForm-#{bill.id}" },
+                      class: "btn btn-danger btn-sm d-none" do %>
+                  <i class="fa-solid fa-trash"></i>
+                <% end %>
+                <button type="button"
+                        class="btn btn-danger btn-sm"
+                        data-bill-form="deleteForm-<%= bill.id %>"
+                        data-action="click->confirm-delete-modal#showModal">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+
+          <!-- Subtotal -->
+          <tr>
+
+            <td colspan="3" class="text-end fw-bold">
+              Subtotal 
+              <% if params[:grouping] == "by_type" %>
+                <% label = case month_date
+                  when "egreso_1" then "Rendición"
+                  when "egreso_2" then "Activo fijo"
+                  when "egreso_3" then "Traspaso Banco → Caja"
+                  when "egreso_4" then "Traspaso Caja  → Pago"
+                  when "egreso_5" then "Otros gastos"
+                  else "Otros" 
+                end %>
+                <%= label %>
+              <% else %>
+                <%= l(month_date, format: "%B %Y").capitalize %>
+              <% end %>
+            </td>
+
+            <td class="text-end fw-bold"><%= number_to_currency(subtotal, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <br>
+  <% end %>
+
+  <!-- Total general -->
+  <% if total_general > 0 %>
+    <div class="mb-3">
+      <h4 class="text-start">
+        TOTAL DEL PERIODO: <%= number_to_currency(total_general, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+      </h4>
+      <br>
+    </div>
+  <% end %>
+
+  <!-- Modal de confirmación -->
+  <div class="modal fade"
+       id="confirmDeleteModal"
+       tabindex="-1"
+      aria-labelledby="confirmDeleteModalLabel"
+      aria-hidden="true"
+      data-confirm-delete-modal-target="modal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteModalLabel">Confirma eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Estás seguro de querer eliminar este registro?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button"
+                  class="btn btn-danger"
+                  data-confirm-delete-modal-target="confirm"
+                  data-action="click->confirm-delete-modal#confirmDelete">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+

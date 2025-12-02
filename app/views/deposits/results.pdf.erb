@@ -1,0 +1,117 @@
+<% self.formats = [:pdf] %>
+
+<style>
+  .page-break { page-break-after: always; }
+  <%# h2, h3 { margin-top: 0; } %>
+  <%# table { width: 100%; border-collapse: collapse; } %>
+  <%# th { border: 1px solid #999; padding: 5px; font-size: 16px; } %>
+  <%#  th { background-color: #eee; } %>
+</style>
+
+<div style="display: flex; justify-content: space-between;">
+  <span><%= I18n.l(Date.today, format: :long) %> - </span>
+  <span><%= current_user.name_community %></span>
+</div>
+
+<h1>Ingresos</h1>
+
+<% if @deposits.count == 0 %>
+  <h2>No existen egresos registrados</h2>
+<% else %>
+  <% total_general = 0 %>
+
+  <% grouped = @deposits.joins(:apartment)
+                        .order("deposits.date ASC, deposits.tipo_ingreso ASC, deposits.ano ASC, deposits.mes ASC")
+                        .group_by(&:apartment)
+                        .sort_by { |apartment, _| apartment.number } %>
+
+  <% grouped.each_with_index do |(apartment, deposits), index| %>
+
+  <h2> <%= current_user.type_community.capitalize %> <%= apartment.number %> - <%= apartment.description %> </h2>
+
+  <div class="table-responsive">
+  <table style="width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed;" >
+    <thead>
+      <tr class="table-primary">
+        <th scope="col" style="text-align: left;  width: 10%; font-size: 14px">FECHA</th>
+        <th scope="col" style="text-align: left;  width: 60%; font-size: 14px">COMENTARIO</th>
+        <th scope="col" style="text-align: left;  width: 25%; font-size: 14px">MES / TIPO INGRESO</th>
+        <th scope="col" style="text-align: right; width:10%;  font-size: 14px">MONTO</th>
+      </tr>
+      <tr>
+        <td colspan="4">
+          <div style="width: 100%; height: 1px; background-color: #000; margin-top: 5px; margin-bottom: 5px"></div>
+        </td>
+      </tr>
+    </thead>
+    <tbody>
+      <% tipo_totales = Hash.new(0) %>
+      <% total_depto = 0 %>
+
+      <% deposits.each do |deposit| %>
+        <tr>
+          <td scope="row" style="width: 15%; text-align: left; font-size: 14px"> <%= deposit.date.strftime("%d-%m-%Y") %> </td>
+          <td style="width: 50%; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <%= deposit.comment %>
+          </td>
+          <td tyle="width: 20%; text-align: left; font-size: 14px">
+            <% if deposit.tipo_ingreso == "ingreso_comun" %>
+              <% if deposit.mes.present? && deposit.ano.present? %>
+                <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> - <%= Constants::MONTHS_NAMES[deposit.mes - 1] %>/<%= deposit.ano %>
+              <% else %>
+                <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> / ** NO PRESENTE **
+              <% end %>
+            <% else %>
+              <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+            <% end %>
+          </td>
+          <td style="width: 15%; text-align: right; font-size: 14px"> <%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %> </td>
+        </tr>
+
+        <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+        <% total_depto += deposit.amount %>
+
+        <% total_general += deposit.amount %>
+      <% end %>
+
+      <tr>
+        <td colspan="4"> 
+          <div style="width: 100%; height: 1px; background-color: #000; margin-top: 5px; margin-bottom: 5px"></div>
+        </td>
+      </tr>
+
+      <% tipo_totales.each do |tipo, suma| %>
+        <tr>
+          <td style="text-align: right; font-size: 14px" colspan="3"> <strong>Subtotal <%= tipo_ingreso_humano(tipo) %> </strong></td>
+          <td style="text-align: right; font-size: 14px"><strong><%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></strong></td>
+        </tr>
+      <% end %>
+
+      <tr>
+        <td colspan="4">
+          <div style="width: 100%; border-bottom: 1px solid #000; margin-top: 5px; margin-bottom: 2px;"></div>
+          <div style="width: 100%; border-bottom: 1px solid #000; margin-bottom: 5px"></div>
+        </td>
+      </tr>
+
+    <tr>
+      <tr>
+        <td style="text-align: right; font-size: 14px"  colspan="3"><strong>TOTAL <%= current_user.type_community.upcase %> <%= apartment.number %></strong></td>
+        <td style="text-align: right; font-size: 14px"><strong><%= number_to_currency(total_depto, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <%# Salto de página después de cada departamento excepto el último %>
+  <% unless index == grouped.size - 1 %>
+    <div class="page-break"></div>
+  <% end %>
+<% end %>
+  <!-- Total general al final de todo -->
+  <div style="width: 100%; border-bottom: 1px solid #000; margin-top: 50px; margin-bottom: 2px;"></div>
+  <div style="width: 100%; border-bottom: 1px solid #000; margin-bottom: 5px"></div>
+  <div style="font-size: 14px; margin-top: 5px">
+      <strong>TOTAL GENERAL <%= number_to_currency(total_general, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></strong>
+  </div>
+<% end %>

@@ -1,0 +1,67 @@
+<h2>Editar cuenta</h2>
+
+<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+
+  <%= render "devise/shared/error_messages", resource: resource %>
+
+  <div class="my-3">
+    Email
+    <p><strong> <%= resource.email%> </strong></p>
+  </div>
+
+  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
+  <% end %>
+
+  <div class="field my-2">
+    <%= f.label :password %> <i>(Deje este campo en blanco si no quiere cambiar su password)</i><br />
+    <%= f.password_field :password, autocomplete: "new-password", class: "ps-2 col-7 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    <% if @minimum_password_length %>
+      <br />
+      <em>(<%= @minimum_password_length %> caracteres mínimo)</em>
+    <% end %>
+  </div>
+
+  <div class="field">
+    <%= f.label :password_confirmation %> <br>
+    <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "Confirmar password", class: "ps-2 col-7 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <div class="my-2">
+    <%= f.label :name, "Nombre", class: "col-6" %> <br>
+    <%= f.text_field :name,  placeholder: "Name", required: true, class: "ps-2 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :role, "Rol", class: "col-6" %><br>
+
+    <% if current_user.admin? %>
+
+      <div class="form-check form-check-inline">
+        <%= f.radio_button :role, "normal", class: "form-check-input" %>
+        <%= f.label :role_normal, "Normal", class: "form-check-label" %>
+      </div>
+
+      <div class="form-check form-check-inline">
+        <%= f.radio_button :role, "admin", class: "form-check-input" %>
+        <%= f.label :role_admin, "Admin", class: "form-check-label" %>
+      </div>
+
+    <% else %>
+    
+        <strong> <%= resource.role.capitalize %></strong> <%= f.hidden_field :role, value: resource.role %>
+
+    <% end %>
+  </div>
+
+  <div class="field">
+    <%= f.label :current_password %> <i>( se requiere su password actual para confirmar los cambios)</i><br />
+    <%= f.password_field :current_password, autocomplete: "current-password", class: "mb-2 ps-2 col-7 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Actualizar", class: "btn btn-secondary col-5 col-md-2" %>
+  </div>
+  <br>
+<% end %>
+

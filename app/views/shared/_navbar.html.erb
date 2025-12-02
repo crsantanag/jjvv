@@ -1,0 +1,99 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary px-auto px-md-10 mx-0 mt-0 mb-3 fixed-top border-bottom border-4 border-info">
+  <div class="container-fluid">
+
+    <strong class="ms-2 fs-5"> 
+        <%= link_to "Inicio", root_path, class:"navbar-brand text-body-secondary", data: { turbo: false } %>
+    </strong>
+
+    <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse gap-2 justify-content-start" id="navbarSupportedContent">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-2">
+        <% if user_signed_in? %>
+          <li class="nav-item col-12 col-md-auto ms-2 ms-sm-0">
+            <%= link_to "Familias", addresses_path,
+                class: "nav-link text-start fs-5 btn #{controller_name == 'addresses' ? 'bg-info text-white' : 'btn-outline-info'}",
+                data: { turbo: false } %>
+          </li>
+          <li class="nav-item col-6 col-md-auto ms-2 ms-sm-0">
+            <%= link_to "#{current_user.type_community}s".html_safe, apartments_path,
+                class: "nav-link text-start fs-5 btn #{controller_name == 'apartments' ? 'bg-info text-white' : 'btn-outline-info'}",
+                data: { turbo: false } %>
+          </li>
+
+          <% if current_user.admin? %>
+            <li class="nav-item col-12 col-md-auto ms-2 ms-sm-0">
+              <%= link_to "Ingresos", deposits_path,
+                  class: "nav-link text-start fs-5 btn #{controller_name == 'deposits' ? 'bg-info text-white' : 'btn-outline-info'}",
+                  data: { turbo: false } %>
+            </li>
+            <li class="nav-item col-12 col-md-auto ms-2 ms-sm-0">
+              <%= link_to "Egresos", bills_path,
+                  class: "nav-link text-start fs-5 btn #{controller_name == 'bills' ? 'bg-info text-white' : 'btn-outline-info'}",
+                  data: { turbo: false } %>
+            </li>
+          <% end %>
+          <li class="nav-item col-12 col-md-auto ms-2 ms-sm-0">
+            <%= link_to "Balance", balance_path,
+                class: "nav-link text-start fs-5 btn #{current_page?(balance_path) ? 'bg-info text-white' : 'btn-outline-info'}",
+                data: { turbo: false } %>
+          </li>
+        <% end %>
+      </ul>
+
+      <% if user_signed_in? %>
+     
+       <% if session[:selected_year] %>
+          <div class="me-3 btn btn-primary btn-sm my-2">
+            <i class="fa-regular fa-calendar"></i> <strong><%= session[:selected_year] %> </strong>
+            <% if session[:balance_inicial] %>
+              | Balance inicial: <strong class="<%= session[:balance_inicial] < 0 ? 'text-danger' : 'text-white' %>">
+              <%= number_to_currency(session[:balance_inicial], unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+              </strong>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div id="year-selector" class="d-flex align-items-center my-2">
+          <%= form_with url: set_year_path, method: :post, local: true, html: { class: "d-flex align-items-center me-2" } do %>
+            <div class="me-1">
+              Año:
+            </div>
+            <%= number_field_tag :year, selected_year || Date.today.year, in: 2020..Date.today.year, class: "form-control form-control-sm me-2 border border-secondary-subtle border-2 rounded", style: "width: 5rem;" %>
+            <%= submit_tag "Cambiar", class: "btn btn-secondary btn-sm" %>
+          <% end %>
+        </div>
+
+      <% end%>
+
+
+
+      <div class="d-flex mx-2 justify-content-end align-items-center" gap-2>
+        <% if user_signed_in? %>
+     
+          <% if current_user.name.present? %>
+              <%= link_to current_user.name,  edit_user_registration_path,  class: "mx-2 btn btn-primary", data: { turbo: false } %>
+          <% else %>
+              <%= link_to current_user.email, edit_user_registration_path,  class: "mx-2 btn btn-primary", data: { turbo: false } %>  
+          <% end %>
+          <% if current_user.admin? %>
+              <%= link_to "Usuarios", users_path, class: "mx-2 btn btn-secondary", data: { turbo: false } %>
+            <% end %>
+          <%= button_to "Cerrar sesión", destroy_user_session_path, method: :delete, class: "btn btn-secondary" %>
+  
+        <% else %>
+
+          <div >
+            <%= link_to "Iniciar sesión", new_user_session_path,   class: "btn btn-secondary", data: { turbo: false } %>
+          </div>
+
+        <% end %>
+      </div>
+  
+
+    </div>
+  </div>
+</nav>

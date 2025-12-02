@@ -1,0 +1,113 @@
+<h2>Editar Usuario</h2>
+
+<%= form_with model: @user, local: true do |f| %>
+  <% if @user.errors.any? %>
+    <div class="alert alert-danger">
+      <h4>Errores:</h4>
+      <ul>
+        <% @user.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="my-3">
+    Email
+    <p><strong> <%= @user.email%> </strong></p>
+  </div>
+  
+  <div class="mb-3">
+    <%= f.label :name_community, "Nombre comunidad" %>
+    <%= f.text_field :name_community, class: "form-control border border-2 border-secondary-subtle rounded", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :type_community, "Tipo comunidad" %>
+    <%= f.text_field :type_community, class: "form-control border border-2 border-secondary-subtle rounded", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :saldo_inicial, "Saldo inicial" %>
+    <%= f.text_field :saldo_inicial, class: "form-control border border-2 border-secondary-subtle rounded", required: true, id: "saldoInicialInput", data: { original_value: f.object.saldo_inicial.present? ? f.object.saldo_inicial.to_s.gsub(/\D/, "") : ""
+    }   %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :name, "Nombre" %>
+    <%= f.text_field :name, class: "form-control border border-2 border-secondary-subtle rounded", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :role, "Rol" %><br>
+    <div class="form-check form-check-inline">
+      <%= f.radio_button :role, "normal", checked: @user.role == "normal", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+      <%= f.label :role_normal, "Normal", class: "form-check-label" %>
+    </div>
+    <div class="form-check form-check-inline">
+      <%= f.radio_button :role, "admin", checked: @user.role == "admin", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+      <%= f.label :role_admin, "Admin", class: "form-check-label" %>
+    </div>
+  </div>
+
+  <hr>
+
+  <p class="text-muted"><strong>Nota:</strong> Solo completa estos campos si deseas cambiar la contraseña del usuario.</p>
+
+  <div class="mb-3">
+    <%= f.label :password, "Nueva contraseña" %>
+    <%= f.password_field :password, class: "form-control border border-2 border-secondary-subtle rounded" %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :password_confirmation, "Confirmar contraseña" %>
+    <%= f.password_field :password_confirmation, class: "form-control border border-2 border-secondary-subtle rounded" %>
+  </div>
+
+  <div class="mt-3">
+    <%= f.submit "Actualizar", class: "btn btn-primary mt-2 mb-3" %>
+    <%= link_to "Regresar", users_path, class: "btn btn-secondary ms-2 mt-2 mb-3" %>
+  </div>
+<% end %>
+
+<script>
+  function editUserFormScript() {
+    // === CANTIDAD (AMOUNT) ===
+    const amountInput = document.getElementById("saldoInicialInput");
+
+    if (amountInput && !amountInput.dataset.listenerAdded) {
+      console.log("Escuchando en saldoInicialInput");
+
+      amountInput.dataset.listenerAdded = true;
+
+      const formatCL = (value) => {
+        const raw = value.replace(/\D/g, ""); // Solo números
+        return new Intl.NumberFormat("es-CL", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(raw);
+      };
+
+      if (amountInput.value) {
+        const rawValue = amountInput.value.replace(/\D/g, "");
+        amountInput.dataset.originalValue = rawValue;
+        amountInput.value = formatCL(rawValue);
+      }
+
+      amountInput.addEventListener("input", function () {
+        const rawValue = this.value.replace(/\D/g, "");
+        this.dataset.originalValue = rawValue;
+        this.value = formatCL(rawValue);
+      });
+
+      if (amountInput.form) {
+        amountInput.form.addEventListener("submit", function () {
+          amountInput.value = amountInput.dataset.originalValue;
+        });
+      }
+    }
+  }
+
+  document.addEventListener("turbo:load", editUserFormScript);
+  document.addEventListener("turbo:render", editUserFormScript);
+</script>

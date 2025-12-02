@@ -1,0 +1,36 @@
+
+<div class="container d-flex justify-content-center mx-0 py-3">
+  <div class="row w-100">
+
+    <!-- Columna izquierda -->
+    <div class="col-11 col-md-4 d-flex flex-column justify-content-center align-items-center text-center my-3">
+      
+      <% if user_signed_in? %>
+        <h1><%= current_user.name_community %></h1>
+      <% end %>
+
+      <div class="d-flex justify-content-center align-items-center text-center border border-info border-2 rounded p-3" >
+        <h2 class="m-0">
+          <strong>
+            <span style="white-space: nowrap;">R E G I S T R O</span>&nbsp;&nbsp;
+            <span style="white-space: nowrap;">D E</span>&nbsp;&nbsp;
+            <span style="white-space: nowrap;">S O C I O S</span>&nbsp;&nbsp;
+            <span style="white-space: nowrap;">Y</span> <br>
+            <span style="white-space: nowrap;">C O N T R O L</span>&nbsp;&nbsp;
+            <span style="white-space: nowrap;">D E</span>&nbsp;&nbsp;&nbsp;&nbsp;
+            <span style="white-space: nowrap;">I N G R E S O S</span>&nbsp;&nbsp;
+            <span style="white-space: nowrap;">Y</span> <br>
+            <span style="white-space: nowrap;">D E</span>&nbsp;&nbsp;&nbsp;&nbsp;
+            <span style="white-space: nowrap;">G A S T O S</span>
+          </strong>
+        </h2>
+      </div>
+      <br>
+    </div>
+
+    <!-- Imagen a la derecha -->
+    <div class="col-12 col-md-8 d-flex justify-content-center align-items-center m-0 p-0">
+      <%= image_tag "portada.jpg", class: "img-fluid m-0 p-0", alt: "Portada" %>
+    </div>
+  </div>
+</div>

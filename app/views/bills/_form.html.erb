@@ -1,0 +1,117 @@
+<%= form_with(model: bill) do |form| %>
+
+  <%= hidden_field_tag :from_month, params[:from_month] || 1 %>
+  <%= hidden_field_tag :to_month, params[:to_month] || 12 %>
+  <%= hidden_field_tag :grouping, params[:grouping] %>
+
+  <% if bill.errors.any? %>
+    <div style="color: red">
+      <% if bill.errors.count == 1 %>
+        <h4>Se encontró <%= bill.errors.count %> error </h4>
+      <% else %>
+        <h4>Se encontraron <%= bill.errors.count %> errores </h4>
+      <% end %>
+      <ul>
+        <% bill.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+<div class="my-2">
+    <%= form.label :date, "Fecha" %><br>
+      <%if action_name == "new" %>
+        <%= form.date_field :date, value: Date.today, required: true, class: "ps-2 col-5 col-sm-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+      <% else %>
+        <%= form.date_field :date, required: true, class: "ps-2 col-5 col-sm-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+      <% end %>
+  </div>
+
+  Concepto del Egreso<br>
+  <div class="ps-2 col-11 col-sm-8 btn-group border border-2 order-secondary-subtle" data-toggle="buttons">
+    <%= form.radio_button :tipo_egreso, "egreso_1", checked: true, id: "tipo_egreso_1" %>
+    <%= form.label :tipo_egreso, "Rendición", value: "egreso_1", class: "btn", for: "tipo_egreso_1" %>
+
+    <%= form.radio_button :tipo_egreso, "egreso_2", id: "tipo_egreso_2" %>
+    <%= form.label :tipo_egreso, "Activo Fijo", value: "egreso_2", class: "btn", for: "tipo_egreso_2" %>
+
+    <%= form.radio_button :tipo_egreso, "egreso_3", id: "tipo_egreso_3" %>
+    <%= form.label :tipo_egreso, "Traspaso Banco → Temp", value: "egreso_3", class: "btn", for: "tipo_egreso_3" %>
+
+    <%= form.radio_button :tipo_egreso, "egreso_4", id: "tipo_egreso_4" %>
+    <%= form.label :tipo_egreso, "Traspaso Caja → Pago", value: "egreso_4", class: "btn", for: "tipo_egreso_4" %>
+
+    <%= form.radio_button :tipo_egreso, "egreso_5", id: "tipo_egreso_5" %>
+    <%= form.label :tipo_egreso, "Otro", value: "egreso_5", class: "btn", for: "tipo_egreso_5" %>
+  </div>
+
+  <div class="field my-2">
+    <%= form.label :comment, "Comentario" %><br />
+    <%= form.text_area :comment, required: true, class: "ps-2 col-11 col-sm-8 border border-2 border-secondary-subtle", rows: 3 %>
+  </div>
+
+  <div class="my-2">
+    <%= form.label :amount, "Cantidad" %><br>
+    <%= form.text_field :amount, required: true, class: "ps-2 col-5 col-sm-2 border border-2 border-secondary-subtle rounded", style:"height: 35px", id: "amount_input", data: { original_value: form.object.amount.present? ? form.object.amount.to_s.gsub(/\D/, "") : ""
+    }  %>
+  </div>
+  <br>
+
+  <div>
+    <% if action_name == "new" %>
+      <%= form.submit "Registrar", class: "btn btn-info col-4 col-sm-3 col-md-2 col-lg-1" %>
+      <div class="py-2">
+        <%= link_to "Regresar", bills_path(from_month: params[:from_month], to_month: params[:to_month]), class: "btn btn-light border border-2 btn-ancho col-4 col-sm-3 col-md-2 col-lg-1" %>
+      </div>
+    <% else %>
+      <%= form.submit "Actualizar", class: "btn btn-info col-4 col-sm-3 col-md-2 col-lg-1" %>
+      <div class="py-2">
+        <%= link_to "Regresar", bills_path(from_month: params[:from_month], to_month: params[:to_month]), class: "btn btn-light border border-2 btn-ancho col-4 col-sm-3 col-md-2 col-lg-1" %>
+      </div>
+     <% end %>
+  </div>
+
+<% end %>
+
+<script>
+  function initBillFormScript() {
+    // === CANTIDAD (AMOUNT) ===
+    const amountInput = document.getElementById("amount_input");
+
+    if (amountInput && !amountInput.dataset.listenerAdded) {
+      console.log("Escuchando en CANTIDAD");
+
+      amountInput.dataset.listenerAdded = true;
+
+      const formatCL = (value) => {
+        const raw = value.replace(/\D/g, ""); // Solo números
+        return new Intl.NumberFormat("es-CL", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(raw);
+      };
+
+      if (amountInput.value) {
+        const rawValue = amountInput.value.replace(/\D/g, "");
+        amountInput.dataset.originalValue = rawValue;
+        amountInput.value = formatCL(rawValue);
+      }
+
+      amountInput.addEventListener("input", function () {
+        const rawValue = this.value.replace(/\D/g, "");
+        this.dataset.originalValue = rawValue;
+        this.value = formatCL(rawValue);
+      });
+
+      if (amountInput.form) {
+        amountInput.form.addEventListener("submit", function () {
+          amountInput.value = amountInput.dataset.originalValue;
+        });
+      }
+    }
+  }
+
+  document.addEventListener("turbo:load", initBillFormScript);
+  document.addEventListener("turbo:render", initBillFormScript);
+</script>

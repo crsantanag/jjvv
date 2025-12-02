@@ -1,0 +1,143 @@
+<%# app/views/pages/balance.pdf.erb %>
+<% content_for :title, "Balance" %>
+
+<style type="text/css">
+/* Reglas para impresión / PDF (wicked_pdf / wkhtmltopdf respetan esto) */
+
+@media print {
+  /* bloque del mes (intentar no partir, pero si es muy grande se romperá) */
+
+  html, body {
+    font-family: "Helvetica", "Arial", sans-serif; font-size: 12px;
+  }
+
+.month-block {
+    page-break-inside: avoid;    /* evita dividir el bloque si cabe */
+    break-inside: avoid;
+  }
+
+  /* que thead se repita en cada página */
+  table { page-break-inside: auto; border-collapse: collapse; width:100% }
+  thead { display: table-header-group; } 
+  tfoot { display: table-footer-group; }
+
+  /* evitar partir filas */
+  tr { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Pedir al motor mantener por lo menos 2 líneas con el encabezado */
+  thead, tbody {
+    widows: 2;   /* mínimo líneas al inicio de una nueva página */
+    orphans: 2;  /* mínimo líneas al final de una página */
+  }
+
+  /* texto en comentario que haga wrap en varias líneas (no forzar ancho) */
+  td.comment { white-space: normal; word-break: break-word; }
+
+  /* evitar que el total se quede huérfano (mantenerlo junto) */
+  .totals-row { page-break-inside: avoid; break-inside: avoid; font-weight: bold; }
+}
+
+</style>
+
+<div style="text-align: center;">
+  <h2>Balance Año <%= session[:selected_year] %></h2>
+</div>
+
+<h4 style="text-align: right; font-weight: bold; padding: 5px;">
+  Saldo inicial &nbsp;&nbsp;
+  <%= formato_monto(@balance_inicial || 0) %>
+</h4>
+
+<% acumulado = @balance_inicial || 0 %>
+<% acumulado_parcial = @balance_inicial || 0 %>
+
+<% if @balance_data.present? %>
+  <% @balance_data.each do |data| %>
+    <% mes = data[:mes] %>
+
+    <div class="month-block">
+      <div class="fw-bold text-dark">
+        <h4><%= l(mes, format: "%B %Y").capitalize %></h4>
+      </div>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px;>
+        <thead>
+          <tr style="background-color: #e0e0e0;">
+            <th style="width: 12%; text-align: left;">FECHA</th>
+            <th style="width: 60%; text-align: left;">COMENTARIO</th>
+            <th style="width: 18%; text-align: left;">TIPO INGRESO</th>
+            <th style="width: 10%; text-align: right;">MONTO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% data[:registros].each do |r| %>
+            <tr>
+              <td><%= r.date.strftime("%d-%m-%Y") %></td>
+              <td class="comment">
+                <% if r.is_a?(Deposit) && r.apartment.present? %>
+                  <%= r.comment.to_s.gsub("&nbsp;", " ") %>
+                <% else %>
+                  <%= r.comment.presence || (r.is_a?(Bill) ? "Egreso" : "Ingreso") %>
+                <% end %>
+              </td>
+              <td>
+                <% if r.is_a?(Deposit) %>
+                  <%= tipo_ingreso_humano(r.tipo_ingreso) %>
+                  <%# mostrar número de socio sin romper layout %>
+                  <% if r.apartment.present? %>
+                    - <%= r.apartment.number %>
+                  <% end %>
+                <% else %>
+                  <%= tipo_egreso_humano(r.tipo_egreso) %>
+                <% end %>
+              </td>
+              <td style="text-align: right;">
+                <%= number_to_currency(r.is_a?(Bill) ? -r.amount : r.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+              </td>
+            </tr>
+          <% end %>
+
+          <tr>
+            <td colspan="3" style="height: 10px;"></td>
+          </tr>
+          <!-- Totales del mes (evitar que se separen) -->
+          <tr class="totals-row fw-bold" style="text-align: right; font-weight: bold; page-break-inside: avoid;">
+            <td colspan="3" class="right">Total ingresos</td>
+            <td class="right"><%= formato_monto(data[:ingresos]) %></td>
+          </tr>
+          <tr class="totals-row fw-bold" style="text-align: right; font-weight: bold; page-break-inside: avoid;">
+            <td colspan="3" class="right">Total egresos</td>
+            <td class="right"><%= formato_monto(-data[:egresos]) %></td>
+          </tr>
+          <tr class="totals-row fw-bold" style="text-align: right; font-weight: bold; page-break-inside: avoid;">
+            <td colspan="3" class="right">Balance del mes</td>
+            <td class="right"><%= formato_monto(data[:ingresos] - data[:egresos]) %></td>
+          </tr>
+          <% acumulado_parcial += data[:ingresos] - data[:egresos] %>
+          <tr class="totals-row fw-bold" style="text-align: right; font-weight: bold; page-break-inside: avoid;">
+            <td colspan="3" class="right">Balance parcial acumulado</td>
+            <td class="right"><%= formato_monto(acumulado_parcial) %></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <% acumulado += data[:ingresos] - data[:egresos] %>
+    </div>
+  <% end %>
+
+  <!-- Total general al final -->
+  <div class="mt-5">
+    <h4 style="text-align: right; font-weight: bold; padding-top: 5px;">
+      Saldo final &nbsp;
+      <span class="<%= acumulado.negative? ? 'text-danger' : '' %>">
+        <%= number_to_currency(acumulado, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+      </span>
+    </h4>
+    <br>
+  </div>
+
+<% else %>
+  <div>
+    <p>No hay movimientos registrados para este año.</p>
+  </div>
+<% end %>

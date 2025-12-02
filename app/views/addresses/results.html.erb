@@ -1,0 +1,77 @@
+<% content_for :title, "Resultados - Direcciones" %>
+
+<h2>Direcciones</h2>
+
+<div class="mb-3">
+    <%= link_to "Exportar CSV", 
+        results_addresses_path(request.query_parameters.merge(format: :csv)), 
+        class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 btn btn-primary btn btn-secondary",
+        data: { turbo: false } %>
+</div>
+
+<div class="table-responsive">
+<table class="table table-bordered table-striped">
+  <thead class="table-primary">
+    <tr>
+      <th scope="col" class="text-center">Dirección</th>
+      <th scope="col">Familia</th>
+      <th scope="col">Socios</th>
+      <th scope="col" class="text-center">ACCIÓN</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @addresses.each do |address| %>
+      <tr class="data-row">
+        <td class="col-1">
+          <% if current_user.admin? %>
+            <%= link_to address.street, edit_address_path(address), data: { turbo: false }, class: "mx-2 col-9 col-md-11 btn btn-primary btn-sm" %>
+          <% else %>
+            <%= address.street %>
+          <% end %>
+        </td>
+
+        <td class="col-2">
+          <% if address.description.blank? %>
+            <em>Sin familia</em>
+          <% else %>
+            <%= address.description %>
+          <% end %>
+        </td>
+
+        <!-- Lista compacta de apartments -->
+        <td class="col-4">
+          <% if address.apartments.any? %>
+            <% address.apartments.order(:number).each do |socio| %>
+              <%= socio.description.truncate(50) %> (<%= socio.number %>) - <%= socio.edad %> años<br>
+            <% end %>
+          <% else %>
+            <em>Sin socios</em>
+          <% end %>
+        </td>
+
+        <td class="col-1 text-center">
+          <div class="d-flex justify-content-center gap-2">
+
+            <!-- Show -->
+            <%= link_to address_path(address), class: "btn btn-secondary btn-sm", data: { turbo: false } do %>
+              <i class="fa-solid fa-file-lines"></i>
+            <% end %>
+
+            <!-- Google Maps -->
+            <%= link_to "https://www.google.com/maps/search/?api=1&query=#{CGI.escape(address.street.to_s)}",
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        class: "btn btn-primary btn-sm",
+                        data: { turbo: false } do %>
+              <i class="fa-solid fa-location-dot"></i>
+            <% end %>
+
+          </div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+</div>
+

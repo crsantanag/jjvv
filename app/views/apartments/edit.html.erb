@@ -1,0 +1,8 @@
+<% content_for :title, "Editing apartment" %>
+
+<h1>Editando <%= current_user.type_community.downcase %> </h1>
+
+<%= render "form", apartment: @apartment %>
+
+<br> 
+

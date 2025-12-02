@@ -1,0 +1,364 @@
+<% content_for :title, "Deposits" %>
+
+<style>
+  .table-fixed {
+    table-layout: fixed; 
+    width: 100%;
+  }
+
+  /* ESTA es la única que fuerza 1px */
+  .table-fixed tbody tr.data-row {
+    height: 24px; 
+  }
+
+  /* las demás filas de subtotal/total vuelven a tener altura automática */
+  .table-fixed tbody tr {
+    height: 24px;
+  }
+
+  .table-fixed th,
+  .table-fixed td {
+    padding: 0.25rem !important; /* menor que el default de Bootstrap */
+    line-height: 24px;
+    vertical-align: middle;
+  }
+
+  .table-fixed td > * {
+    margin: 0 !important; /* elimina márgenes internos */
+  }
+
+  .w-10 { width: 10%; }
+  .w-15 { width: 15%; }
+  .w-40 { width: 40%; }
+  .w-20 { width: 20%; }
+  .text-end {
+     text-align: right; 
+  }
+</style>
+
+<h2> Detalle de ingresos</h2>
+
+<div class="pt-2 pb-3">
+  <%= link_to "Exportar PDF",
+            results_deposits_path(request.query_parameters.merge(format: :pdf)), class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 btn btn-primary btn btn-secondary", target: "_blank", rel: "noopener" %>
+  </div>
+
+<div data-controller="confirm-delete-modal">
+
+  <% total_general = 0 %>
+  <div class="table-responsive"> 
+    
+      <% grouping = params[:grouping] || "by_apartment_date" %>
+
+      <% if grouping == "by_apartment_date" %>
+
+        <% grouped = @deposits.joins(:apartment)
+                              .order("deposits.date ASC, deposits.tipo_ingreso ASC,  deposits.ano ASC, deposits.mes ASC")
+                              .group_by(&:apartment)
+                              .sort_by { |apartment, _| apartment.number } %>
+
+        <% grouped.each do |apartment, deposits| %>
+          <h4> <%= current_user.type_community.capitalize %> <%= apartment.number %> - <%= apartment.description %> </h4>
+
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr class="table-primary p-0 m-0">
+                <th scope="col" class="col-1">FECHA</th>
+                <th scope="col" class="col-4">COMENTARIO</th>
+                <th scope="col" class="col-1">TIPO INGRESO</th>
+                <th scope="col" class="col-1 text-end">MONTO</th>
+                <th scope="col" class="col-1 text-center">ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% tipo_totales = Hash.new(0) %>
+              <% total_depto = 0 %>
+
+              <% deposits.each do |deposit| %>
+                <tr class="data-row">
+                  <td>
+                    <%= link_to deposit.date.strftime("%d-%m-%Y"), edit_deposit_path(deposit, request.query_parameters), data: { turbo: false }, class: "btn btn-primary btn-sm" %>
+                  </td>
+                  <td class="text-start"> <%= deposit.comment %> </td>
+                  <td class="text-start">
+                    <% if deposit.tipo_ingreso == "ingreso_1" %>
+                      <% if deposit.mes.present? && deposit.ano.present? %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>  <%# - <%= Constants::MONTHS_NAMES[deposit.mes - 1] %> <%# <%= deposit.ano %>
+                      <% else %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> - ** NO PRESENTE **
+                      <% end %>
+                    <% else %>
+                      <% if deposit.amount < 0 %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+                      <% else %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+                      <% end %>
+                    <% end %>
+                  </td>
+                  <td class="text-end"> <%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %> </td>
+
+                  <td class="text-center">
+                    <!-- Botón invisible real -->
+                    <%= button_to deposit,
+                        method: :delete,
+                        data: { turbo: false },
+                        form: { id: "deleteForm-#{deposit.id}" },
+                        class: "btn btn-danger btn-sm d-none" do %>
+                          <i class="fa-solid fa-trash"></i>
+                      <% end %>
+
+                      <!-- Botón visible que activa el modal -->
+                      <button type="button"
+                              class="btn btn-danger btn-sm"
+                              data-deposit-form="deleteForm-<%= deposit.id %>"
+                              data-action="click->confirm-delete-modal#showModal">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+
+                </tr>
+
+                <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+                <% total_depto += deposit.amount %>
+                <% total_general += deposit.amount %>
+              <% end %>
+
+              <% tipo_totales.each do |tipo, suma| %>
+                <tr class="table-light">
+                  <td colspan="3" class="text-end fw-bold"> <%= tipo_ingreso_humano(tipo) %> </td>
+                  <td class="text-end fw-bold"><%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                  <td></td>
+                </tr>
+              <% end %>
+
+              <tr class="table-secondary">
+                <td colspan="3" class="text-end fw-bold">TOTAL</td>
+                <td class="text-end fw-bold"><%= number_to_currency(total_depto, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                <td></td>
+              </tr>
+
+            </tbody>
+          </table>
+          <br>
+        <% end %>
+
+      <% elsif grouping == "by_apartment_month" %>
+
+        <% grouped = @deposits_by_ano_mes.group_by(&:apartment).sort_by { |a, _| a.number } %>
+
+        <% grouped.each do |apartment, deposits| %>
+          <h4> <%= current_user.type_community.capitalize %> <%= apartment.number %> - <%= apartment.description %> </h4>
+
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr class="table-primary">
+                <th scope="col" class="col-1">FECHA</th>
+                <th scope="col" class="col-4">COMENTARIO</th>
+                <th scope="col" class="col-1">TIPO INGRESO / MES</th>
+                <th scope="col" class="col-1 text-end">MONTO</th>
+                <th scope="col" class="col-1 text-center">ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% tipo_totales = Hash.new(0) %>
+              <% total_depto = 0 %>
+
+              <% deposits.each do |deposit| %>
+                  <tr class="data-row">
+                    <td>
+                      <%= link_to deposit.date.strftime("%d-%m-%Y"), edit_deposit_path(deposit, request.query_parameters), data: { turbo: false }, class: "btn btn-primary btn-sm" %>
+                    </td>
+                    <td class="text-start"><%= deposit.comment %></td>
+                    <td class="text-start">
+                      <% if deposit.tipo_ingreso == "ingreso_comun"%>
+                        <% if deposit.mes.present? && deposit.ano.present? %>
+                          <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> - <%= Constants::MONTHS_NAMES[deposit.mes - 1] %>/<%= deposit.ano %>
+                        <% else %>
+                          <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> / ** NO PRESENTE **
+                        <% end %>
+                      <% else %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+                      <% end %>
+                    </td>
+                    <td class="text-end"><%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+
+                    <td class="text-center">
+                      <!-- Botón invisible real -->
+                      <%= button_to deposit,
+                          method: :delete,
+                          data: { turbo: false },
+                          form: { id: "deleteForm-#{deposit.id}" },
+                          class: "btn btn-danger btn-sm d-none" do %>
+                            <i class="fa-solid fa-trash"></i>
+                          <% end %>
+
+                      <!-- Botón visible que activa el modal -->
+                      <button type="button"
+                              class="btn btn-danger btn-sm"
+                              data-deposit-form="deleteForm-<%= deposit.id %>"
+                              data-action="click->confirm-delete-modal#showModal">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </td>
+
+                  </tr>
+                  <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+                  <% total_depto += deposit.amount %>
+                  <% total_general += deposit.amount %>
+
+              <% end %>
+
+              <% tipo_totales.each do |tipo, suma| %>
+                <tr class="table-light">
+                  <td colspan="3" class="text-end fw-bold"> <%= nombre_tipo_ingreso(tipo) %> </td>
+                  <td class="text-end fw-bold"><%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                  <td></td>
+                </tr>
+              <% end %>
+
+              <tr class="table-secondary">
+                <td colspan="3" class="text-end fw-bold">TOTAL</td>
+                <td class="text-end fw-bold"><%= number_to_currency(total_depto, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                <td></td>
+              </tr>
+
+            </tbody>
+          </table>
+        <% end %>
+        <br>
+        
+      <% elsif grouping == "by_month" %>
+
+        <% grouped = @deposits_by_month.group_by(&:mes) %>
+
+        <% grouped.each do |mes, deposits| %>
+          <h4 class="mt-4"><%= t("date.month_names")[mes] %> <%= session[:selected_year] %> </h4>
+
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr class="table-primary">
+                <th scope="col" class="col-1">FECHA</th>
+                <th scope="col" class="col-1"> <%= current_user.type_community.upcase%> </th>
+                <th scope="col" class="col-4">COMENTARIO</th>
+                <th scope="col" class="col-1">TIPO INGRESO / MES</th>
+                <th scope="col" class="col-1 text-end">MONTO</th>
+                <th scope="col" class="col-1 text-center">ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% tipo_totales = Hash.new(0) %>
+              <% total_mes = 0 %>
+
+              <% deposits.each do |deposit| %>
+                <tr class="data-row">
+                  <td>
+                    <%= link_to deposit.date.strftime("%d-%m-%Y"), edit_deposit_path(deposit, request.query_parameters), data: { turbo: false }, class: "btn btn-primary btn-sm" %>
+                  </td>
+                  <td><%= deposit.apartment.number %></td>
+                  <td><%= deposit.comment %></td>
+                  <td class="text-start">
+                    <% if deposit.tipo_ingreso == "ingreso_comun" %>
+                      <% if deposit.mes.present? && deposit.ano.present? %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> - <%= Constants::MONTHS_NAMES[deposit.mes - 1] %>/<%= deposit.ano %>
+                      <% else %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> / ** NO PRESENTE **
+                      <% end %>
+                    <% else %>
+                      <% if deposit.amount < 0 %>
+                        Carajete
+                      <% else %>
+                        <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+                      <% end %>
+                    <% end %>
+                  </td>
+                  <td class="text-end">
+                    <%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+                  </td>
+                  <td class="text-center">
+                    <!-- Botón invisible real -->
+                    <%= button_to deposit,
+                        method: :delete,
+                        data: { turbo: false },
+                        form: { id: "deleteForm-#{deposit.id}" },
+                        class: "btn btn-danger btn-sm d-none" do %>
+                          <i class="fa-solid fa-trash"></i>
+                    <% end %>
+
+                    <!-- Botón visible que activa el modal -->
+                    <button type="button"
+                      class="btn btn-danger btn-sm"
+                      data-deposit-form="deleteForm-<%= deposit.id %>"
+                      data-action="click->confirm-delete-modal#showModal">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </td>
+
+                </tr>
+                <% total_general += deposit.amount %>
+                <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+                <% total_mes += deposit.amount %>
+
+              <% end %>
+
+              <% tipo_totales.each do |tipo, suma| %>
+                <tr class="table-light">
+                  <td colspan="4" class="text-end fw-bold"> <%= nombre_tipo_ingreso(tipo) %> </td>
+                  <td class="text-end fw-bold"><%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                  <td></td>
+                </tr>
+              <% end %>
+
+              <tr class="table-secondary">
+                <td colspan="4" class="text-end fw-bold">TOTAL</td>
+                <td class="text-end fw-bold"><%= number_to_currency(total_mes, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                <td></td>
+              </tr>
+
+            </tbody>
+          </table>
+        <% end %>
+        <br>
+
+      <% end %> 
+
+      <% if total_general > 0 %>
+        <div class="mb-3">
+          <h4 class="text-start">
+            TOTAL DEL PERIODO: <%= number_to_currency(total_general, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+          </h4>
+          <br>
+        </div>
+      <% end %>
+      <br>
+  </div>
+
+  <!-- Modal de confirmación -->
+  <div class="modal fade"
+    id="confirmDeleteModal"
+    tabindex="-1"
+    aria-labelledby="confirmDeleteModalLabel"
+    aria-hidden="true"
+    data-confirm-delete-modal-target="modal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteModalLabel">Confirma eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          ¿Estás seguro de querer eliminar este registro?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button"
+                  class="btn btn-danger"
+                  data-confirm-delete-modal-target="confirm"
+                  data-action="click->confirm-delete-modal#confirmDelete">
+                  Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,100 @@
+<% content_for :title, "Resultados de búsqueda" %>
+
+<h2>Socios</h2>
+
+<div class="mb-3">
+  <%= link_to "Exportar CSV", 
+        results_apartments_path(request.query_parameters.merge(format: :csv)), 
+        class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 btn btn-primary btn btn-secondary",
+        data: { turbo: false } %>
+</div>
+
+<%# Aquí insertas exactamente la tabla que ya tenías (copiada desde tu partial results) %>
+<div id="apartments">
+  <div data-controller="confirm-delete-modal">
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr class="table-primary">
+            <th scope="col" class="text-center" >Número</th>
+            <th scope="col">Nombre</th>
+            <th scope="col" class="text-start" >Dirección</th>
+            <th scope="col" class="text-center" >ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @apartments.each do |apartment| %>
+            <tr class="table-light">
+              <td class="col-1 text-center" scope="row">
+                <% if current_user.admin? %>
+                  <%= link_to apartment.number, edit_apartment_path(apartment, request.query_parameters), data: { turbo: false }, class: "col-9 col-md-6 btn btn-primary btn-sm" %>
+                <% else %>
+                  <%= apartment.number %>
+                <% end %>
+              </td>
+              <td class="col-4 text-start" scope="row"> <%= apartment.description %> </td>
+              <td class="col-4 text-start" scope="row"> <%= apartment.address&.street || "Sin dirección" %> </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <%= link_to apartment_path(apartment, request.query_parameters),
+                      class: "btn btn-secondary btn-sm me-1",
+                      data: { turbo: false } do %>
+                    <i class="fa-solid fa-file-lines"></i>
+                  <% end %>
+
+                  <%= button_to apartment_path(apartment, request.query_parameters),
+                      method: :delete,
+                      data: { turbo: false },
+                      form: { id: "deleteForm-#{apartment.id}" },
+                      class: "btn btn-danger btn-sm d-none" do %>
+                    <i class="fa-solid fa-trash"></i>
+                  <% end %>
+
+                  <% if current_user.admin? %>
+                    <button type="button"
+                        class="btn btn-danger btn-sm" 
+                        data-deposit-form="deleteForm-<%= apartment.id %>"
+                        data-action="click->confirm-delete-modal#showModal">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  <% end %>
+
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Modal de confirmación (copiar el tuyo) %>
+    <div class="modal fade"
+      id="confirmDeleteModal"
+      tabindex="-1"
+      aria-labelledby="confirmDeleteModalLabel"
+      aria-hidden="true"
+      data-confirm-delete-modal-target="modal">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmDeleteModalLabel">Confirma eliminación</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              ¿Estás seguro de querer eliminar este registro?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="button"
+                      class="btn btn-danger"
+                      data-confirm-delete-modal-target="confirm"
+                      data-action="click->confirm-delete-modal#confirmDelete">
+                      Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+    </div>
+
+  </div>
+</div>

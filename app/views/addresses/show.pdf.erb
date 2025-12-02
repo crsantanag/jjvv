@@ -1,0 +1,130 @@
+<%# app/views/addresses/show.html.erb (o show.pdf.erb si quieres separarlo) %>
+<% deposits = @deposits || [] %>
+
+<div style="position: relative; width: 600px; height: 100px; margin-left: 0px;">
+  <%= wicked_pdf_image_tag "logo.png", style: "width: 100px; position: absolute; left: 0; z-index: 1;" %>
+  <div style="position: absolute; left: 120px; top: 8px; width: 300px; font-size: 12px; font-weight: bold; z-index: 0;">
+    JJVV BARRIO ORIENTE CONCEPCIÓN <br>
+    RUT: 65.216.642-3 <br>
+    INSCRIPCIÓN N° 329785 DEL 08-06-2022 <br>
+    REGISTRO MUNICIPAL N° 3134 <br>
+    CONCEPCIÓN
+  </div>
+</div>
+
+<h2 style="text-align: center;">Detalle de Ingresos por Grupo Familiar</h2>
+
+<% total_general = 0 %>
+
+<table style="font-size: 18px; border-collapse: collapse;">
+  <tr>
+    <td style="width: 150px; font-weight: bold;">Familia:</td>
+    <td><%= @address.description.presence || "-" %></td>
+  </tr>
+
+  <tr>
+    <td style="width: 150px; font-weight: bold;">Dirección:</td>
+    <td><%= @address.street %></td>
+  </tr>
+
+  <tr>
+    <td style="width: 150px; font-weight: bold; vertical-align: top;">Socios(as):</td>
+    <td>
+      <% @address.apartments.order(:number).each do |socio| %>
+        <%= socio.description.truncate(50) %> (Nro. <%= socio.number %>, desde el <%= socio.start_date.strftime("%d-%m-%Y") %>) <br>
+      <% end %>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="width: 150px; font-weight: bold;">Pagado hasta:</td>
+    <td><%= @address.ult_mes_pagado ? ("%02d" % @address.ult_mes_pagado) : "--" %>/<%= @address.ult_ano_pagado ? ("%04d" % @address.ult_ano_pagado) : "--" %></td>
+  </tr>
+
+</table>
+
+<br><hr><br>
+<table style="width: 100%; border-collapse: collapse; font-size: 16px;">
+  <thead>
+    <tr style="background-color: #e0e0e0;">
+      <th style="width: 15%; padding: 5px; text-align: left;">FECHA</th>
+      <th style="width: 55%; padding: 5px; text-align: left;">COMENTARIO</th>
+      <th style="width: 20%; padding: 5px; text-align: left;">TIPO INGRESO</th>
+      <th style="width: 10%; padding: 5px; text-align: right;">MONTO</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% tipo_totales = Hash.new(0) %>
+    <% total_depto = 0 %>
+
+    <% deposits.each do |deposit| %>
+      <tr>
+        <td style="padding: 5px;"><%= deposit.date.strftime("%d-%m-%Y") %></td>
+        <td style="padding: 5px;">
+          <%= deposit.comment.presence || (deposit.is_a?(Bill) ? "Egreso" : "Ingreso") %>
+          <%# opcional: mostrar apartment si quieres identificar a qué socio pertenece %>
+          <% if deposit.apartment.present? %>
+            <br><span style="font-size:12px;color:#666;">Socio: <%= deposit.apartment.description.presence || "Depto #{deposit.apartment.number}" %></span>
+          <% end %>
+        </td>
+        <td style="padding: 5px;">
+          <% if deposit.tipo_ingreso == "ingreso_comun" %>
+            <% if deposit.mes.present? && deposit.ano.present? %>
+              <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+            <% else %>
+              <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> / ** NO PRESENTE **
+            <% end %>
+          <% else %>
+            <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+          <% end %>
+        </td>
+        <td style="padding: 5px; text-align: right;">
+          <%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+        </td>
+      </tr>
+
+      <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+      <% total_depto += deposit.amount %>
+      <% total_general += deposit.amount %>
+    <% end %>
+
+    <% if tipo_totales.present? %>
+      <% tipo_totales.each do |tipo, suma| %>
+        <tr>
+          <td style="padding: 5px;">&nbsp;</td>
+          <td style="padding: 5px;">&nbsp;</td>
+          <td style="text-align: left; font-weight: bold; padding: 5px;">
+            Total <%= tipo_ingreso_humano(tipo) %>
+          </td>
+          <td style="text-align: right; font-weight: bold; padding: 5px;">
+            <%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+          </td>
+        </tr>
+      <% end %>
+    <% end %>
+
+    <tr style="background-color: #e0e0e0;">
+      <td style="padding: 5px;">&nbsp;</td>
+      <td style="padding: 5px;">&nbsp;</td>
+      <td tyle="text-align: left; font-weight: bold; padding: 5px;">TOTAL GENERAL</td>
+      <td style="text-align: right; font-weight: bold; padding: 5px;">
+        <%= number_to_currency(total_depto, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<br><br><br>
+
+<div style="position: relative; width: 300px; height: 100px; margin-left: 800px;">
+  <%= wicked_pdf_image_tag "Carlos.png", style: "width: 300px; position: absolute; top: 80px; left: 0; z-index: 1;" %>
+
+  <div style="position: absolute; top: 165px; left: 0; width: 300px; font-size: 20px; font-weight: bold; z-index: 0;">
+    CARLOS SANTANA GACITUA<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TESORERO
+  </div>
+
+  <span style="position: absolute; top: 220px; left: 0px; width: 300px; font-size: 14px; font-weight: bold">
+    Fecha emisión informe: <%= Time.zone.now.strftime("%d-%m-%Y %H:%M:%S") %>
+  </span>
+</div>

@@ -1,0 +1,52 @@
+es:
+  errors:
+    messages:
+      not_saved: "Error!"
+      not_found: "no encontrado"
+  devise:
+    sessions:
+      signed_in: "SESIÓN INICIADA CORRECTAMENTE"
+      signed_out: "SESIÓN CERRADA CORRECTAMENTE"
+    registrations:
+      updated: "CUENTA ACTUALIZADA"
+    failure:
+      user:
+        not_found_in_database: "eMAIL o CONTRASEÑA INVÁLIDO"
+      invalid: "eMAIL o CONTRASEÑA INVÁLIDO"
+      unauthenticated: "DEBE INICIAR SESIÓN ANTES DE ACCEDER A ESTA PÁGINA"
+    passwords:
+      send_instructions: "Recibirás un correo electrónico con instrucciones para restablecer tu contraseña en unos minutos."
+      updated: "Tu contraseña ha sido cambiada correctamente. Ahora estás conectado."
+      updated_not_active: "Tu contraseña ha sido cambiada correctamente."
+      no_token: "No puedes acceder a esta página si no vienes desde un correo de recuperación de contraseña."
+      send_paranoid_instructions: "Si tu correo existe en nuestra base de datos, recibirás un correo con instrucciones."
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            email:
+              not_found: "No se encontró ningún usuario con este correo electrónico"
+              blank: "no puede estar en blanco"
+    attributes:
+      deposit:
+        tipo_ingreso:
+          ingreso_comun: "Cuota social"
+          ingreso_extraordinario: "Certificado residencia"
+          ingreso_otro: "Otros ingresos"
+        amount: "Cantidad"
+      bill:
+        amount: "Cantidad"
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d de %B"
+      long: "%d de %B de %Y"
+    month_names: [nil, "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    abbr_month_names: [nil, "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+    day_names: ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"]
+    abbr_day_names: ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"]
+    order:
+      - day
+      - month
+      - year

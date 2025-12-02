@@ -1,0 +1,38 @@
+<h1>Usuarios</h1>
+<%= link_to "Registrar nuevo usuario", new_user_registration_path, class: "btn btn-success mt-1" %>
+
+<h2 class="mt-4">Usuarios registrados</h2>
+
+<table class="table table-bordered table-hover">
+  <thead class="table-light">
+    <tr>
+      <th>Nombre comunidad</th>
+      <th>Tipo comunidad</th>
+      <th class="text-end">Saldo inicial</th>
+      <th>Nombre</th>
+      <th>Email</th>
+      <th>Rol</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr>
+        <td><%= user.name_community %></td>
+        <td><%= user.type_community %></td>
+        <td class="text-end"><%= number_to_currency(user.saldo_inicial, unit: "$", delimiter: ".", precision: 0) %></td>
+        <td><%= user.name %></td>
+        <td><%= user.email %></td>
+        <td><%= user.role.capitalize %></td>
+        <td class="d-flex">
+          <%= link_to "Editar", edit_user_path(user), class: "btn btn-sm btn-primary" %>
+          <% unless user == current_user %>
+            <%= button_to "Eliminar", user_path(user), method: :delete, data: { confirm: "¿Estás seguro?" }, class: "btn btn-sm btn-danger ms-2" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+

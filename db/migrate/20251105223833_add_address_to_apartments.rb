@@ -1,0 +1,5 @@
+class AddAddressToApartments < ActiveRecord::Migration[7.2]
+  def change
+    add_reference :apartments, :address, null: true, foreign_key: true
+  end
+end

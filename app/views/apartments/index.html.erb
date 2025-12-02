@@ -1,0 +1,56 @@
+<% content_for :title, "Apartments" %>
+
+<% if current_user.admin? %>
+  <%= link_to "Registrar ".html_safe + current_user.type_community.downcase.html_safe, 
+      new_apartment_path, 
+      class:"mb-3 col-6 col-sm-4 col-md-2 col-lg-2 fs-5 btn bg-info text-white", 
+      data: { turbo: false } %>
+<% end %>
+
+<%= form_with url: results_apartments_path, method: :get, local: true, html: { id: "filter_form", data: { controller: "auto-submit" } } do %>
+  <div class="row ms-0 mt-1 mb-1 g-3 col-12 col-md-6 align-items-start border border-2 border-secondary-subtle rounded">
+
+    <!-- Campo de búsqueda -->
+    <div class="col-auto">
+      <%= label_tag :search, (params[:order] == "description" ? "Buscar por número o nombre del socio(a)" : "Buscar por número o nombre del socio(a)"), data: { auto_submit_target: "label" } %>
+      <%= text_field_tag :search, params[:search], class: "form-control mb-1 border border-2 border-secondary-subtle rounded", data: { auto_submit_target: "search" } %>
+    </div>
+
+    <!-- Botón buscar -->
+    <div class="col-auto">
+      <%= submit_tag "Buscar", class: "my-4 btn btn-primary" %>
+    </div>
+  
+    <!-- Radios de orden -->
+    <div class="ms-3 col-auto">
+      <%= label_tag :order, "Ordenar por:" %><br>
+      <div class="form-check form-check-inline">
+        <%= radio_button_tag :order, "number", params[:order] != "description", id: "order_by_number", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :order_by_number, "Número", class: "form-check-label" %>
+      </div>
+      <div class="form-check form-check-inline">
+        <%= radio_button_tag :order, "description", params[:order] == "description", id: "order_by_description", class: "form-check-input  border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :order_by_description, "Nombre", class: "form-check-label mb-1" %>
+      </div>
+    </div>
+
+  </div>
+<% end %>
+
+<% if current_user.admin? %>
+  <div class="mt-2 mb-3 col-12 col-md-6 border border-2 border-secondary-subtle rounded">
+    <%= form_with url: import_apartments_path, method: :post, local: true, html: { multipart: true } do |f| %>
+      <h5 class="mt-1 ms-2">Importar datos desde archivo Excel</h5>
+      <div class="ms-2">
+        <%= f.label :file, "Archivo" %>
+        <%= f.file_field :file, class: "ps-2 py-1 col-10 col-md-8 border border-2 border-secondary-subtle rounded", style:"height: 40px" %>
+      </div>
+      <div class="ms-2">
+        <%= f.submit "Importar", class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 ms-2 btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+
+

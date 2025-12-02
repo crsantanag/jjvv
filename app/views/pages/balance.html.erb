@@ -1,0 +1,104 @@
+<% content_for :title, "Balance" %>
+
+  <div class="text-center">
+    <h2>Balance Año <%= session[:selected_year] %></h2>
+  </div>
+
+  <div class="mb-4">
+    <%= link_to "Exportar PDF", balance_path(format: :pdf), class: "col-4 col-sm-3 col-md-2 col-lg-2 btn btn-secondary", target: "_blank", rel: "noopener" %>
+  </div>
+
+
+  <h4 class="text-start">
+    Saldo inicial
+    <%= formato_monto(@balance_inicial || 0) %>
+  </h4>
+
+  <% acumulado         = @balance_inicial || 0 %>
+  <% acumulado_parcial = @balance_inicial || 0 %>
+
+  <% if @balance_data.present? %>
+
+    <% @balance_data.each do |data| %>
+    <% mes = data[:mes] %>
+
+    <div class="fw-bold text-dark">
+      <h4><%= l(mes, format: "%B %Y").capitalize %></h4></td>
+    </div> 
+
+    <div class="table-responsive">
+    <table class="table table-bordered">
+      <thead class="table-primary">
+        <tr>
+          <th>FECHA</th>
+          <th>COMENTARIO</th>
+          <th>TIPO </th>
+          <th class="text-end">MONTO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% data[:registros].each do |r| %>
+          <tr class="<%= r.is_a?(Bill) ? 'text-danger' : 'text-dark' %>">
+            <td><%= r.date.strftime("%d-%m-%Y") %></td>
+            <td>
+              <% if r.is_a?(Deposit) && r.apartment.present? %>
+                <%= r.comment %>
+              <% else %>
+                <%= r.comment.presence || (r.is_a?(Bill) ? "Egreso" : "Ingreso") %>
+              <% end %>
+            </td>
+            <td>
+              <% if r.is_a?(Deposit) && r.apartment.present? %>
+                <%= tipo_ingreso_humano(r.tipo_ingreso) %> - <%= r.apartment.number %>
+              <% else %>
+                <%= tipo_egreso_humano(r.tipo_egreso) %>
+              <% end %>
+            </td>
+            <td class="text-end <%= 'text-danger' if r.is_a?(Bill) || r.amount.negative? %>">
+              <%= number_to_currency(r.is_a?(Bill) ? -r.amount : r.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+            </td>
+          </tr>
+        <% end %>
+
+        <!-- Totales del mes -->
+        <tr class="fw-bold">
+          <td colspan="3" class="border-0 text-end">Total ingresos</td>
+          <td class="text-end"><%= formato_monto(data[:ingresos]) %></td>
+        </tr>
+        <tr class="fw-bold">
+          <td colspan="3" class="border-0 text-end">Total egresos</td>
+          <td class="text-end"><%= formato_monto(-data[:egresos]) %></td>
+        </tr>
+        <tr class="fw-bold">
+          <td colspan="3" class="border-0 text-end">Balance del mes</td>
+
+          <td class="text-end"><%= formato_monto(data[:ingresos] - data[:egresos]) %></td>
+        </tr>
+        <% acumulado_parcial += data[:ingresos] - data[:egresos]%>
+        <tr class="fw-bold">
+          <td colspan="3" class="border-0 text-end">Balance parcial acumulado</td>
+
+          <td class="text-end"><%= formato_monto(acumulado_parcial) %></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <% acumulado += data[:ingresos] - data[:egresos] %>
+
+  <% end %>
+
+  <!-- Total general al final de todo -->
+  <div class="mt-5">
+    <h4>
+      Saldo final 
+      <span class="<%= acumulado.negative? ? 'text-danger' : '' %>">
+        <%= number_to_currency(acumulado, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+      </span>
+    </h4>
+    <br>
+  </div>
+
+  <% else %>
+    <tr><td colspan="4">No hay movimientos registrados para este año.</td></tr>
+  <% end %>
+

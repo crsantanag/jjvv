@@ -1,0 +1,94 @@
+<p style="color: green"><%= notice %></p>
+
+
+<% content_for :title %>
+
+<h2>Grupo Familiar</h2>
+
+<div class="mb-3">
+  <%= link_to "Exportar PDF", address_path(@address, format: :pdf), class: "col-4 col-sm-3 col-md-2 col-lg-2 btn btn-secondary" %>
+</div>
+
+  <h4> <%= @address.description.presence || "Sin descripción" %> <br>
+       <%= @address.street %>
+        </h4>
+        Pagado hasta el mes <%= @address.ult_mes_pagado ? ("%02d" % @address.ult_mes_pagado) : "--" %>/<%= @address.ult_ano_pagado ? ("%04d" % @address.ult_ano_pagado) : "--" %>
+<hr>
+
+<h4>Socios</h4>
+
+<% if @apartments.any? %>
+  <% @apartments.each do |apartment| %>
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <strong><%= apartment.number %></strong> — <%= apartment.description.presence || "Sin descripción" %>
+          <small class="text-muted ms-2">Fecha de Ingreso: <%= @address.fecha_inicio&.strftime("%d/%m/%Y") || "-" %></small>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        <% deposits = @deposits_grouped[apartment.id] || [] %>
+
+        <% if deposits.any? %>
+          <div class="table-responsive">
+          <table class="table table-bordered table-striped mb-0">
+            <thead class="table-light p-0 m-0">
+              <tr>
+                <th scope="col" class="col-1">Fecha</th>
+                <th scope="col" class="col-7">Comentario</th>
+                <th scope="col" class="col-2">Tipo</th>
+                <th scope="col" class="col-1 text-end">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% deposits.each do |deposit| %>
+                <tr class="<%= deposit.is_a?(Bill) ? 'table-danger' : '' %>">
+                  <td>
+                    <% if current_user.admin? %>
+                      <%= link_to deposit.date.strftime("%d-%m-%Y"), edit_deposit_path(deposit), data: { turbo: false }, class: "btn btn-primary btn-sm" %>
+                    <% else %>
+                      <%= deposit.date.strftime("%d-%m-%Y") %>
+                    <% end %>
+                  </td>
+                  <td><%= deposit.comment.presence || (deposit.is_a?(Bill) ? "Egreso" : "Ingreso") %></td>
+                  <td><%= tipo_ingreso_humano(deposit.tipo_ingreso) rescue deposit.tipo_ingreso %></td>
+                  <td class="text-end"><%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+                </tr>
+              <% end %>
+
+              <!-- Total por apartment -->
+              <tr class="table-secondary fw-bold">
+                <td colspan="3" class="text-end">Total</td>
+                <td class="text-end">
+                  <%= number_to_currency(@sums_by_apartment[apartment.id] || 0, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        <% else %>
+          <div class="p-3">No hay depósitos asociados a este socio.</div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="card mt-3">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped mb-0">
+          <tbody>
+            <tr class="table-secondary fw-bold">
+              <td scope="col" class="col-10 text-end"> Total general </td>
+              <td scope="col" class="col-1 text-end"> <%= number_to_currency(@total_general || 0, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %> </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <br>
+<% else %>
+  <p>No hay apartamentos asociados a esta dirección.</p>
+<% end %>

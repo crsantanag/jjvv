@@ -1,0 +1,40 @@
+* {
+  margin: 0px;
+  padding: 0px;
+  /* border:   solid 1px red */
+}
+
+.navbar {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.navbar-collapse {
+  background-color: #ffffff !important;
+}
+
+.navbar-nav .nav-item {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%
+}
+
+@media (max-width: 767px) {
+
+  .navbar-collapse {
+    background-color: #ffffff !important;
+    border: 2px solid #000 !important;
+    border-radius: 5px !important;
+    padding-top: 10px !important;
+    padding-bottom: 20px !important;
+    margin-left: 0px !important;
+  }
+
+}

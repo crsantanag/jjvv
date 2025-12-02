@@ -1,0 +1,59 @@
+<%= form_with(model: apartment) do |form| %>
+
+  <%= hidden_field_tag :order, params[:order] %>
+  <%= hidden_field_tag :commit, params[:commit] %>
+  
+  <% if apartment.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(apartment.errors.count, "error") %> No es posible crear/actualizar debido a:</h2>
+      <ul>
+        <% apartment.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="my-2">
+    <%= form.label :address_id, "Dirección", class: "col-6" %><br>
+    <%= form.collection_select :address_id, @addresses, :id, ->(a) { "#{a.street} - #{a.description}" },
+        { prompt: "Seleccione dirección" },
+        { class: "ps-1 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style: "height: 35px", required: true } %>
+  </div>
+
+  <div class="my-2">
+    <%= form.label :number, "#{current_user.type_community} número", class: "col-6" %><br>
+    <%= form.text_field :number, autocomplete: "number", class: "ps-2 col-4 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px"  %>
+  </div>
+
+  <div class="my-2">
+  <%= form.label :start_date, "Fecha incorporación" %><br>
+    <%if action_name == "new" %>
+      <%= form.date_field :start_date, value: Date.today, required: true, class: "ps-1 col-5 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    <% else %>
+      <%= form.date_field :start_date, required: true, class: "ps-1 col-4 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    <% end %>
+  </div>
+
+  <div class="my-2">
+    <%= form.label :description, "Nombre socio", class: "col-6" %><br>
+    <%= form.text_field :description, required: true, class: "ps-2 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+ 
+  <div class="my-2">
+    <% if action_name == "new" %>
+      <%= form.submit "Registrar", class: "btn btn-info col-4 col-sm-1 mt-2 mb-2" %>
+      <div>
+        <%= link_to "Regresar", apartments_path, class: "col-4 col-sm-1 btn btn-light border border-2" %>
+      </div>
+    <% else %>
+      <%= form.submit "Actualizar", class: "btn btn-info col-4 col-sm-1 mt-2 mb-2" %>
+      <div>
+        <%= link_to "Regresar", apartments_path, class: "col-4 col-sm-1 btn btn-light border border-2" %>
+      </div>
+    <% end %>
+  </div>
+  <br>
+  
+<% end %>
+

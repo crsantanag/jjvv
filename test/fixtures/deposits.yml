@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  date: 2025-04-09
+  amount: 1
+  comment: MyString
+  tipo_ingreso: 1
+  mes: 1
+  ano: 1
+  user: one
+  apartment: one
+
+two:
+  date: 2025-04-09
+  amount: 1
+  comment: MyString
+  tipo_ingreso: 1
+  mes: 1
+  ano: 1
+  user: two
+  apartment: two

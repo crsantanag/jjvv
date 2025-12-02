@@ -1,0 +1,83 @@
+
+
+<h2> Detalle de Ingresos </h2>
+
+<div class="mb-3">
+  <%= link_to "Exportar PDF", apartment_path(@apartment, format: :pdf), class: "col-4 col-sm-3 col-md-2 col-lg-2 btn btn-secondary" %>
+</div>
+
+<% total_general = 0 %>
+<div class="table-responsive"> 
+
+  <h4>
+    <%= @apartment.description %> <br>
+    <%= @apartment.address&.street || "Sin Dirección" %> ( <%= @apartment.address&.description || "Sin Descripción" %> ) 
+  </h4>
+  <h5>
+    <%= current_user.type_community.capitalize %> <%= @apartment.number %>,&nbsp; desde <%= @apartment.start_date.strftime("%d/%m/%Y") %> <br>
+    Pagado hasta el mes <%= @apartment.address.ult_mes_pagado ? ("%02d" % @apartment.address.ult_mes_pagado) : "--" %>/<%= @apartment.address.ult_ano_pagado ? ("%04d" % @apartment.address.ult_ano_pagado) : "--" %>
+    
+  </h5>
+  <hr>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr class="table-primary p-0 m-0">
+        <th scope="col" class="col-1">FECHA</th>
+        <th scope="col" class="col-7">COMENTARIO</th>
+        <th scope="col" class="col-2">TIPO INGRESO</th>
+        <th scope="col" class="col-1 text-end">MONTO</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% tipo_totales = Hash.new(0) %>
+      <% total_depto = 0 %>
+
+      <% @deposits.each do |deposit| %>
+        <tr class="data-row">
+          <td>
+            <%= deposit.date.strftime("%d-%m-%Y") %>
+          </td>
+          <td class="text-start"> <%= deposit.comment %> </td>
+          <td class="text-start">
+            <% if deposit.tipo_ingreso == "ingreso_comun" %>
+              <% if deposit.mes.present? && deposit.ano.present? %>
+                <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+              <% else %>
+                <%= tipo_ingreso_humano(deposit.tipo_ingreso) %> / ** NO PRESENTE **
+              <% end %>
+            <% else %>
+              <%= tipo_ingreso_humano(deposit.tipo_ingreso) %>
+            <% end %>
+            </td>
+            <td class="text-end"> <%= number_to_currency(deposit.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %> </td>
+        </tr>
+
+        <% tipo_totales[deposit.tipo_ingreso] += deposit.amount %>
+        <% total_depto += deposit.amount %>
+        <% total_general += deposit.amount %>
+      <% end %>
+
+      <% tipo_totales.each do |tipo, suma| %>
+        <tr class="table-light">
+          <td style="padding: 5px;">&nbsp;</td>
+          <td style="padding: 5px;">&nbsp;</td>
+          <td class="text-left fw-bold"> Total <%= tipo_ingreso_humano(tipo) %> </td>
+          <td class="text-end fw-bold"><%= number_to_currency(suma, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+        </tr>
+      <% end %>
+
+      <tr class="table-secondary">
+        <td style="padding: 5px;">&nbsp;</td>
+        <td style="padding: 5px;">&nbsp;</td>
+        <td class="text-left fw-bold">TOTAL GENERAL</td>
+        <td class="text-end fw-bold"><%= number_to_currency(total_depto, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %></td>
+      </tr>
+
+    </tbody>
+  </table>
+  <br>
+
+</div>
+
+<br>

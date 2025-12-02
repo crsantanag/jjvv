@@ -1,0 +1,72 @@
+<% content_for :title, "Deposits" %>
+
+<%= link_to "Registrar ingreso", 
+    new_deposit_path(request.query_parameters), 
+    class:"mb-3 col-6 col-sm-4 col-md-2 col-lg-2 fs-5 btn bg-info text-white", 
+    data: { turbo: false } %>
+ 
+<%= form_with url: results_deposits_path, method: :get, local: true do %>
+  <div class="row ms-0 mt-1 mb-3 g-3 col-12 col-md-12 border border-2 border-secondary-subtle rounded">
+
+
+    <!-- Columna 3: Filtros por departamento -->
+    <div class="col-md-3 my-1">
+      <%= label_tag :apartment_number, "N° socio" %>
+      <%= text_field_tag :apartment_number, params[:apartment_number], class: "form-control mb-1 border border-2 border-secondary-subtle rounded" %>
+      <%= label_tag :apartment_description, "Nombre socio" %>
+      <%= text_field_tag :apartment_description, params[:apartment_description], class: "form-control border border-2 border-secondary-subtle rounded" %>
+    </div>
+
+    <!-- Columna 1: Fecha -->
+    <div class="col-md-3 my-1">
+      <%= label_tag :from_month, "Desde" %>
+      <%= select_tag :from_month,
+            options_for_select((1..12).map { |m| [I18n.t("date.month_names")[m], m] }, @from_date.month),
+            class: "form-control mb-1 border border-2 border-secondary-subtle rounded" %>
+      <%= label_tag :to_month, "Hasta" %>
+      <%= select_tag :to_month,
+            options_for_select((1..12).map { |m| [I18n.t("date.month_names")[m], m] }, @to_date.month),
+            class: "form-control mb-1 border border-2 border-secondary-subtle rounded" %>
+     </div>
+
+    <!-- Columna 2: Agrupar por -->
+    <div class="col-md-3 my-1">
+      <%= label_tag :grouping, "Agrupar por" %><br>
+      <div class="form-check">
+        <%= radio_button_tag :grouping, "by_apartment_date", params[:grouping] == "by_apartment_date" || params[:grouping].blank?, id: "grouping_by_apartment_date", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :grouping_by_apartment_date, "#{current_user.type_community.capitalize} / Fecha del ingreso", class: "form-check-label" %>
+      </div>
+      <div class="form-check mt-2">
+        <%= radio_button_tag :grouping, "by_apartment_month", params[:grouping] == "by_apartment_month", id: "grouping_by_apartment_month", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :grouping_by_apartment_type, "#{current_user.type_community.capitalize} / Mes", class: "form-check-label" %>
+      </div>
+      <div class="form-check">
+        <%= radio_button_tag :grouping, "by_month", params[:grouping] == "by_month", id: "grouping_by_month", class: "form-check-input mb-1 border border-2 border-secondary-subtle rounded" %>
+        <%= label_tag :grouping_by_month, "Mes / #{current_user.type_community.capitalize}", class: "form-check-label" %>
+      </div>
+    </div>
+
+    <!-- Columna 4: Acciones -->
+    <div class="col-md-3 mt-1 d-flex flex-column justify-content-start">
+      <br>
+      <%= submit_tag "Buscar", class: "col-6 mb-2 btn btn-primary" %>
+      <%= link_to "Limpiar", deposits_path, class: "col-6 mb-2 btn btn-secondary" %>
+    </div>
+  </div>
+<% end %>
+
+<% if current_user.admin? %>
+  <div class="mt-2 my-1 border border-2 border-secondary-subtle rounded">
+    <%= form_with url: import_deposits_path, method: :post, local: true, html: { multipart: true } do |f| %>
+      <h5 class="mt-1 ms-2">Importar datos desde archivo Excel</h5>
+      <div class="ms-2">
+        <%= f.label :file, "Archivo" %>
+        <%= f.file_field :file, class: "ps-2 py-1 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style:"height: 40px" %>
+      </div>
+      <div>
+        <%= f.submit "Importar", class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 ms-2 btn btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
