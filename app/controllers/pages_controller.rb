@@ -35,7 +35,9 @@ class PagesController < ApplicationController
     sum_egresos  = Bill.where(date: month_range).where.not(tipo_egreso: 4).sum(:amount)
 
     # Orden total del mes por created_at (todos los registros, incluidos los excluidos de las sumas)
-    registros_ordenados = (mes_ingresos_records + mes_egresos_records).sort_by(&:created_at)
+    registros_ordenados = (mes_ingresos_records + mes_egresos_records)
+                        .sort_by { |r| [ r.date, r.created_at ] } 
+
 
     {
       mes: month,

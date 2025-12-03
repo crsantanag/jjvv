@@ -16,6 +16,7 @@
 
   <% acumulado         = @balance_inicial || 0 %>
   <% acumulado_parcial = @balance_inicial || 0 %>
+  <% acumulado_mostrar = @balance_inicial || 0 %>
 
   <% if @balance_data.present? %>
 
@@ -30,14 +31,16 @@
     <table class="table table-bordered">
       <thead class="table-primary">
         <tr>
-          <th>FECHA</th>
-          <th>COMENTARIO</th>
-          <th>TIPO </th>
-          <th class="text-end">MONTO</th>
+          <th style="width: 12%; text-align: left;">FECHA</th>
+          <th style="width: 50%; text-align: left;">COMENTARIO</th>
+          <th style="width: 18%; text-align: left;">TIPO INGRESO</th>
+          <th style="width: 10%; text-align: right;">MONTO</th>
+          <th style="width: 10%; text-align: right;">SALDO</th>
         </tr>
       </thead>
       <tbody>
         <% data[:registros].each do |r| %>
+          <% acumulado_mostrar = acumulado_mostrar + (r.is_a?(Bill) ? -r.amount : r.amount) %>
           <tr class="<%= r.is_a?(Bill) ? 'text-danger' : 'text-dark' %>">
             <td><%= r.date.strftime("%d-%m-%Y") %></td>
             <td>
@@ -56,6 +59,9 @@
             </td>
             <td class="text-end <%= 'text-danger' if r.is_a?(Bill) || r.amount.negative? %>">
               <%= number_to_currency(r.is_a?(Bill) ? -r.amount : r.amount, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
+            </td>
+            <td class="text-end">
+              <%= number_to_currency(acumulado_mostrar, unit: "$", delimiter: ".", precision: 0, format: "%u%n") %>
             </td>
           </tr>
         <% end %>
