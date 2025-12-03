@@ -4,6 +4,10 @@
   /* border:   solid 1px red */
 }
 
+table {
+  table-layout: auto !important;
+}
+
 .navbar {
   background-color: #ffffff !important;
   opacity: 1 !important;
