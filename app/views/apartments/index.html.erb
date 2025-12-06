@@ -23,7 +23,7 @@
   
     <!-- Radios de orden -->
     <div class="ms-3 col-auto">
-      <%= label_tag :order, "Ordenar por:" %><br>
+      <%= label_tag :order, "Ordenar por" %><br>
       <div class="form-check form-check-inline">
         <%= radio_button_tag :order, "number", params[:order] != "description", id: "order_by_number", class: "form-check-input border border-2 border-secondary-subtle rounded" %>
         <%= label_tag :order_by_number, "Número", class: "form-check-label" %>
@@ -32,10 +32,26 @@
         <%= radio_button_tag :order, "description", params[:order] == "description", id: "order_by_description", class: "form-check-input  border border-2 border-secondary-subtle rounded" %>
         <%= label_tag :order_by_description, "Nombre", class: "form-check-label mb-1" %>
       </div>
+
+      <!-- NUEVA FILA: Registros (Activos / Todos) -->
+      <div class="mt-2 mb-2">
+        <%= label_tag :registros, "Registros" %><br>
+        <div class="form-check form-check-inline">
+          <%= radio_button_tag :registros, "A", params[:registros] != "all", id: "registros_activos", class: "form-check-input  border border-2 border-secondary-subtle rounded" %>
+          <%= label_tag :registros_activos, "Activos", class: "form-check-label" %>
+        </div>
+        <div class="form-check form-check-inline">
+          <%= radio_button_tag :registros, "all", params[:registros] == "all", id: "registros_todos", class: "form-check-input  border border-2 border-secondary-subtle rounded" %>
+          <%= label_tag :registros_todos, "Todos", class: "form-check-label" %>
+        </div>
+      </div>
+      <!-- /NUEVA FILA -->
+
     </div>
 
   </div>
 <% end %>
+
 
 <% if current_user.admin? %>
   <div class="mt-2 mb-3 col-12 col-md-6 border border-2 border-secondary-subtle rounded">

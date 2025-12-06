@@ -2,12 +2,14 @@
 
 <h2>Socios</h2>
 
-<div class="mb-3">
-  <%= link_to "Exportar CSV", 
+<% if current_user.admin? %>
+  <div class="mb-3">
+    <%= link_to "Exportar CSV", 
         results_apartments_path(request.query_parameters.merge(format: :csv)), 
         class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 btn btn-primary btn btn-secondary",
         data: { turbo: false } %>
-</div>
+  </div>
+<% end %>
 
 <%# Aquí insertas exactamente la tabla que ya tenías (copiada desde tu partial results) %>
 <div id="apartments">
@@ -25,12 +27,8 @@
         <tbody>
           <% @apartments.each do |apartment| %>
             <tr class="table-light">
-              <td class="col-1 text-center" scope="row">
-                <% if current_user.admin? %>
-                  <%= link_to apartment.number, edit_apartment_path(apartment, request.query_parameters), data: { turbo: false }, class: "col-9 col-md-6 btn btn-primary btn-sm" %>
-                <% else %>
-                  <%= apartment.number %>
-                <% end %>
+              <td class="col-1 text-center" scope="row"> 
+                <%= link_to apartment.number, edit_apartment_path(apartment, request.query_parameters), data: { turbo: false }, class: "col-9 col-md-6 btn btn-primary btn-sm" %>
               </td>
               <td class="col-4 text-start" scope="row"> <%= apartment.description %> </td>
               <td class="col-4 text-start" scope="row"> <%= apartment.address&.street || "Sin dirección" %> </td>

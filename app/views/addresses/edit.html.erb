@@ -9,4 +9,9 @@
 <div>
   <%= link_to "Show this address", @address %> |
   <%= link_to "Back to addresses", addresses_path %>
+
+  <div>
+    <%= button_to "Destroy this address", @address, method: :delete %>
+  </div>    
+
 </div>

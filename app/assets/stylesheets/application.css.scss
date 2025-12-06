@@ -14,3 +14,70 @@
  *= require_self
  */
 @import "font-awesome";
+
+* {
+    margin: 0px;
+    padding: 0px;
+    /* border: solid 1px red; */
+}
+
+table {
+    table-layout: auto !important;
+}
+
+.mt-navbar {
+    margin-top: 90px;
+    /* default desktop */
+}
+
+.navbar {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+.navbar-collapse {
+    background-color: #ffffff !important;
+}
+
+.navbar-nav .nav-item {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+/* Limitar imagen a máximo 80% del ancho en pantallas md+ */
+.portada-img {
+    width: 80%;
+    /* comportamiento normal en móviles */
+    height: auto;
+}
+
+
+
+@media (max-width: 768px) {
+    .mt-navbar {
+        margin-top: 70px;
+        /* móviles */
+    }
+
+    .navbar-collapse {
+        background-color: #ffffff !important;
+        border: 2px solid #000 !important;
+        border-radius: 5px !important;
+        padding-top: 10px !important;
+        padding-bottom: 20px !important;
+        margin-left: 0px !important;
+    }
+
+    .portada-img {
+        max-width: 100% !important;
+        height: auto;
+    }
+}

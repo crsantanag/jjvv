@@ -42,6 +42,10 @@ class ApartmentsController < ApplicationController
     # Base query
     @apartments = Apartment.all
 
+    if params[:registros] == "A" || params[:registros].blank?
+      @apartments = @apartments.where(estado: "A")
+    end
+
     # Aplicar búsqueda
     if search.present?
       @apartments = @apartments.where(
@@ -74,28 +78,31 @@ class ApartmentsController < ApplicationController
                       Arel.sql("COALESCE(SUM(CASE WHEN CAST(tipo_ingreso AS text) = '1' THEN amount ELSE 0 END),0)"),
                       Arel.sql("COALESCE(SUM(CASE WHEN CAST(tipo_ingreso AS text) = '2' THEN amount ELSE 0 END),0)"),
                       Arel.sql("COALESCE(SUM(CASE WHEN CAST(tipo_ingreso AS text) = '3' THEN amount ELSE 0 END),0)"),
+                      Arel.sql("COALESCE(SUM(CASE WHEN CAST(tipo_ingreso AS text) = '4' THEN amount ELSE 0 END),0)"),
+                      Arel.sql("COALESCE(SUM(CASE WHEN CAST(tipo_ingreso AS text) = '5' THEN amount ELSE 0 END),0)"),
                       Arel.sql("COALESCE(SUM(amount),0)")
               )
 
-        deposit_sums_by_apartment = rows.each_with_object({}) do |(apt_id, s1, s2, s3, tot), h|
-          h[apt_id.to_i] = { suma1: s1.to_i, suma2: s2.to_i, suma3: s3.to_i, total: tot.to_i }
+        deposit_sums_by_apartment = rows.each_with_object({}) do |(apt_id, s1, s2, s3, s4, s5, tot), h|
+          h[apt_id.to_i] = { suma1: s1.to_i, suma2: s2.to_i, suma3: s3.to_i, suma4: s4.to_i, suma5: s5.to_i, total: tot.to_i }
         end
 
         csv_string = CSV.generate(col_sep: ";") do |csv|
-          csv << [ "Número", "Nombre", "Ap_paterno", "Ap_materno", "Description", "Street", "Tipo 1", "Tipo 2", "Tipo 3", "Total" ]
+          csv << [ "Número", "Nombre", "Ap_paterno", "Ap_materno", "Dirección", "Cuota Social", "Certificado Residencia", "Traspaso", "Otro", "Otros egresos", "Total" ]
 
           apartments_ordered.each do |apt|
-            sums = deposit_sums_by_apartment[apt.id] || { suma1: 0, suma2: 0, suma3: 0, total: 0 }
+            sums = deposit_sums_by_apartment[apt.id] || { suma1: 0, suma2: 0, suma3: 0, suma4: 0, suma5: 0, total: 0 }
             csv << [
               apt.number,
               apt.nombre.to_s,
               apt.ap_paterno.to_s,
               apt.ap_materno.to_s,
-              apt.description.to_s,
               apt.address&.street.to_s,
               sums[:suma1],
               sums[:suma2],
               sums[:suma3],
+              sums[:suma4],
+              sums[:suma5],
               sums[:total]
             ]
           end
@@ -208,6 +215,6 @@ class ApartmentsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def apartment_params
-      params.require(:apartment).permit(:number, :description, :start_date, :ult_mes_pago, :ult_ano_pago, :user_id, :address_id)
+      params.require(:apartment).permit(:number, :description, :start_date, :ap_paterno, :ap_materno, :nombre, :edad, :estado_civil, :profesion, :domicilio, :rut, :dv, :telefono, :estado, :user_id, :address_id)
     end
 end

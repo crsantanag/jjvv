@@ -2,12 +2,14 @@
 
 <h2>Direcciones</h2>
 
-<div class="mb-3">
+<% if current_user.admin? %>
+  <div class="mb-3">
     <%= link_to "Exportar CSV", 
         results_addresses_path(request.query_parameters.merge(format: :csv)), 
         class: "col-6 col-sm-4 col-md-2 col-lg-2 my-2 btn btn-primary btn btn-secondary",
         data: { turbo: false } %>
-</div>
+  </div>
+<% end %>
 
 <div class="table-responsive">
 <table class="table table-bordered table-striped">
@@ -43,7 +45,15 @@
         <td class="col-4">
           <% if address.apartments.any? %>
             <% address.apartments.order(:number).each do |socio| %>
-              <%= socio.description.truncate(50) %> (<%= socio.number %>) - <%= socio.edad %> años<br>
+
+              <% if socio.start_date.present? && socio.edad.present? %>
+                <% edad_hoy = socio.edad + ((Date.today - socio.start_date).to_i / 365.25).floor %>
+                <%= socio.description.truncate(50) %> (<%= socio.number %>) - <%= edad_hoy %> años - <%= socio.estado %><br>
+              <% else %>
+                <% edad_hoy = 0 %>
+                 <%= socio.description.truncate(50) %> (<%= socio.number %>) - N/I años - <%= socio.estado %><br>
+              <% end %>
+
             <% end %>
           <% else %>
             <em>Sin socios</em>

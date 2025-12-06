@@ -30,13 +30,16 @@ class PagesController < ApplicationController
 
     # Sumas EXCLUYENDO tipo_ingreso = 3 y tipo_egreso = 4 (se hacen en SQL por precisión)
     # Si tus columnas se llaman exactamente :tipo_ingreso / :tipo_egreso esto funcionará.
+    # sum_ingresos = Deposit.where(date: month_range).where.not(tipo_ingreso: 3).sum(:amount)
+    # sum_egresos  = Bill.where(date: month_range).where.not(tipo_egreso: 4).sum(:amount)
     # Si se llamaran distinto, reemplaza por el nombre correcto.
+
     sum_ingresos = Deposit.where(date: month_range).where.not(tipo_ingreso: 3).sum(:amount)
-    sum_egresos  = Bill.where(date: month_range).where.not(tipo_egreso: 4).sum(:amount)
+    sum_egresos  = Bill.where(date: month_range).where.not(tipo_egreso: 3).sum(:amount)
 
     # Orden total del mes por created_at (todos los registros, incluidos los excluidos de las sumas)
     registros_ordenados = (mes_ingresos_records + mes_egresos_records)
-                        .sort_by { |r| [ r.date, r.created_at ] } 
+                        .sort_by { |r| [ r.date, r.created_at ] }
 
 
     {

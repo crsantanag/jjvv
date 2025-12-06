@@ -14,46 +14,114 @@
     </div>
   <% end %>
 
-  <div class="my-2">
-    <%= form.label :address_id, "Dirección", class: "col-6" %><br>
+  <div class="col-11 col-md-12">
+    <%= form.label :number, "#{current_user.type_community} número" %><br>
+    <%= form.text_field :number, autocomplete: "number", class: "ps-2 col-2 col-md-1 border border-2 border-secondary-subtle rounded", style:"height: 35px"  %>
+  </div>
+
+  <!-- Nombre y apellidos -->
+  <div class="col-11 col-md-12">
+    <%= form.label :nombre, "Nombre" %><br>
+    <%= form.text_field :nombre, class: "ps-2 col-12 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <div class="col-11 col-md-12">
+    <%= form.label :ap_paterno, "Apellido paterno" %><br>
+    <%= form.text_field :ap_paterno, class: "ps-2 col-12 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <div class="col-11 col-md-12">
+    <%= form.label :ap_materno, "Apellido materno" %><br>
+    <%= form.text_field :ap_materno, class: "ps-2 col-12 col-md-3 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  </div>
+
+  <!-- Dirección y número -->
+  <div class="col-11 col-md-12">
+    <%= form.label :address_id, "Identificador grupo familiar" %><br>
     <%= form.collection_select :address_id, @addresses, :id, ->(a) { "#{a.street} - #{a.description}" },
         { prompt: "Seleccione dirección" },
-        { class: "ps-1 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style: "height: 35px", required: true } %>
+        { class: "ps-1 col-12 col-md-4 border border-2 border-secondary-subtle rounded", style: "height: 35px", required: true } %>
   </div>
 
-  <div class="my-2">
-    <%= form.label :number, "#{current_user.type_community} número", class: "col-6" %><br>
-    <%= form.text_field :number, autocomplete: "number", class: "ps-2 col-4 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px"  %>
+    <!-- Domicilio -->
+  <div class="col-11 col-md-12">
+    <%= form.label :domicilio, "Dirección socio" %><br>
+    <%= form.text_field :domicilio, class: "ps-2 col-12 col-md-4 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
   </div>
 
-  <div class="my-2">
-  <%= form.label :start_date, "Fecha incorporación" %><br>
-    <%if action_name == "new" %>
-      <%= form.date_field :start_date, value: Date.today, required: true, class: "ps-1 col-5 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
-    <% else %>
-      <%= form.date_field :start_date, required: true, class: "ps-1 col-4 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+  <div class="row">
+    <!-- Fecha de incorporación -->
+    <div class="col-12 col-md-2">
+      <%= form.label :start_date, "Fecha incorporación" %><br>
+      <%= form.date_field :start_date,
+          required: true,
+          class: "ps-1 col-6 col-md-9 border border-2 border-secondary-subtle rounded",
+          style:"height: 35px" %>
+    </div>
+
+    <!-- Edad -->
+    <div class="col-12 col-md-2">
+      <%= form.label :edad, "Edad" %><br>
+      <%= form.number_field :edad,
+          class: "ps-2 col-6 col-md-9 border border-2 border-secondary-subtle rounded",
+          style:"height: 35px",
+          min: 0 %>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Estado civil -->
+    <div class="col-12 col-md-2">
+      <%= form.label :estado_civil, "Estado civil" %><br>
+      <%= form.select :estado_civil, options_for_select([["Soltero(a)","SOLTERO"], ["Casado(a)","CASADO"], ["Viudo(a)","VIUDO"], ["Divorciado(a)","DIVORCIADO"], ["Unión Civil","UNION"], ["Conviviente","CONVIVIENTE"]], apartment.estado_civil), { include_blank: "Seleccione" }, class: "ps-1 col-6 col-md-9 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <%= form.label :profesion, "Profesión" %><br>
+      <%= form.text_field :profesion, class: "ps-2 col-6 col-md-9 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 col-md-2">
+      <%= form.label :telefono, "Teléfono" %><br>
+      <%= form.telephone_field :telefono, class: "ps-2 col-6 col-md-9 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    </div>
+
+    <!-- Estado (A = activo, I = inactivo) -->
+    <div class="col-12 col-md-2">
+      <%= form.label :estado, "Estado" %><br>
+      <%= form.select :estado, options_for_select([["Activo","A"],["Cambio Domicilio","CD"],["Fallecido(a)","QEPD"]], apartment.estado), {}, class: "ps-1 col-6 col-md-9 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- RUT / DV -->
+    <div class="col-12 col-md-2">
+      <%= form.label :rut, "RUT" %><br>
+      <%= form.number_field :rut, class: "ps-2 col-6 col-md-9 border border-2 border-secondary-subtle rounded", style:"height: 35px", min: 0 %>
+    </div>
+
+    <div class="col-12 col-md-2">
+      <%= form.label :dv, "DV" %><br>
+      <%= form.text_field :dv, class: "ps-2 col-1 col-md-2 border border-2 border-secondary-subtle rounded", style:"height: 35px", maxlength: 1 %>
+    </div>
+
+  <div class="my-3">
+    <% if current_user.admin? %>
+      <% if action_name == "new" %>
+        <%= form.submit "Registrar", class: "btn btn-info col-4 col-sm-2 col-md-2 col-lg-1 mt-2 mb-2" %> <br>
+      <% else %>
+        <%= form.submit "Actualizar", class: "btn btn-info col-4 col-sm-2 col-md-2 col-lg-1 mt-2 mb-2" %> <br>
+      <% end %>
     <% end %>
-  </div>
 
-  <div class="my-2">
-    <%= form.label :description, "Nombre socio", class: "col-6" %><br>
-    <%= form.text_field :description, required: true, class: "ps-2 col-11 col-md-6 border border-2 border-secondary-subtle rounded", style:"height: 35px" %>
-  </div>
- 
-  <div class="my-2">
-    <% if action_name == "new" %>
-      <%= form.submit "Registrar", class: "btn btn-info col-4 col-sm-1 mt-2 mb-2" %>
-      <div>
-        <%= link_to "Regresar", apartments_path, class: "col-4 col-sm-1 btn btn-light border border-2" %>
-      </div>
-    <% else %>
-      <%= form.submit "Actualizar", class: "btn btn-info col-4 col-sm-1 mt-2 mb-2" %>
-      <div>
-        <%= link_to "Regresar", apartments_path, class: "col-4 col-sm-1 btn btn-light border border-2" %>
-      </div>
-    <% end %>
+    <%= link_to "Regresar", apartments_path, class: "col-4 col-sm-2 col-md-2 col-lg-1 btn btn-light border border-2" %>
+
   </div>
   <br>
   
 <% end %>
+
+
 
